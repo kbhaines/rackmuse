@@ -53,9 +53,6 @@
 (define span-end cdar)
 (define (span-length s)(- (span-end s) (span-start s)))
 
-; test piece is 4 bars
-(define tlength (/ (* 4 bar) e))
-
 (define join (compose flatten append))
 
 (define r1a (list q e er e e))
@@ -80,18 +77,17 @@
 (define cello (join r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
-(define dbass-spans  (gen-spans dbass))
-
-(define (grab-chords rhythm chords)
+(define (project-chords rhythm chords [selector identity])
   (define rhythm-spans (gen-spans rhythm))
   (define chord-spans (gen-spans chords chord-duration))
-  (pretty-display
-   (for/list ([p rhythm-spans])
-     (define start (span-start p))
-     (list start (span-length p) (chord-notes (list-ref chords (index-spans chord-spans start)))))))
+  (for/list ([p rhythm-spans])
+    (define start (span-start p))
+    (list start
+          (span-length p)
+          (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
 
-(grab-chords dbass chords)
-(grab-chords cello chords)
+(pretty-display (project-chords dbass chords first))
+(pretty-display (project-chords cello chords second))
 
 (exit 0)
 
