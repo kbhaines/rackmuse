@@ -7,7 +7,9 @@
 (define er (- 0 e))
 
 (define bar (* 3 q))
+(define barr (- 0 bar))
 (define dbar (* 2 bar))
+(define dbarr (- 0 dbar))
 
 #;(define-values
     (
@@ -73,8 +75,13 @@
 ;; (pretty-print (gen-spans (join r2 r2 r2 r2) identity))
 ;; (exit 0)
 
+(define tacet1 (list dbar))
+(define tacet2 (list dbarr))
+(define tacet4 (list dbarr dbarr))
+
 (define dbass (join r2 r2 r2 r2))
 (define cello (join r1 r1 r1 r1))
+(define viola (join tacet4 tacet4 r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
 (define (project-chords rhythm chords [selector identity])
@@ -88,6 +95,7 @@
 
 (pretty-display (project-chords dbass chords first))
 (pretty-display (project-chords cello chords second))
+(pretty-display (project-chords viola chords third))
 
 (exit 0)
 
