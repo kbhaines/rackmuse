@@ -1,6 +1,7 @@
 #lang racket
 
-(define q 10)
+(define PPQ 480)
+(define q PPQ)
 (define qr (- 0 q))
 (define dqr (- 0 (* 3 (/ q 2))))
 (define e (/ q 2))
@@ -93,9 +94,15 @@
           (span-length p)
           (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
 
+(require "mid.rkt")
+
 (pretty-display (project-chords dbass chords first))
-(pretty-display (project-chords cello chords second))
-(pretty-display (project-chords viola chords third))
+(make-midi-track-file "out.mid"
+                      (list
+                       (project-chords cello chords first)
+                       (project-chords dbass chords first)))
+;; (pretty-display (project-chords cello chords second))
+;; (pretty-display (project-chords viola chords third))
 
 (exit 0)
 
