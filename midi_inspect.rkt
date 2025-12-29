@@ -185,6 +185,63 @@
         (set! sigs (cons (list (evt-tick e) (evt-a e) (evt-b e)) sigs)))))
   (sort sigs < #:key first))
 
+(define (bar-boundaries max-tick division time-sigs)
+  (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
+  (define bars '())
+  (define sig-count (length sigs))
+  (for ([i (in-range sig-count)])
+    (define curr (list-ref sigs i))
+    (define start (first curr))
+    (define num (second curr))
+    (define denom (third curr))
+    (define bar-ticks (inexact->exact (/ (* division num 4) denom)))
+    (define next-start
+      (if (< i (sub1 sig-count)) (first (list-ref sigs (add1 i))) max-tick))
+    (for ([t (in-range start (+ next-start bar-ticks) bar-ticks)])
+      (when (< t max-tick)
+        (set! bars (cons t bars)))))
+  (sort bars <))
+
+(define (write-ascii notes division time-sigs cols)
+  (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
+  (define ticks-per-col
+    (cond
+      [(and cols (> cols 0))
+       (inexact->exact (max 1 (ceiling (/ max-tick cols))))]
+      [else (max 1 (quotient division 4))]))
+  (define total-cols (if (= max-tick 0) 0 (inexact->exact (ceiling (/ max-tick ticks-per-col)))))
+  (define bars (bar-boundaries max-tick division time-sigs))
+  (define bar-cols
+    (for/list ([t bars] #:when (> t 0))
+      (inexact->exact (quotient t ticks-per-col))))
+
+  (define by-track (make-hash))
+  (for ([n notes])
+    (hash-set! by-track (note-track n) (cons n (hash-ref by-track (note-track n) '()))))
+  (define track-ids (sort (hash-keys by-track) <))
+
+  (for ([ti track-ids])
+    (define tnotes (reverse (hash-ref by-track ti)))
+    (define min-p (apply min (map note-pitch tnotes)))
+    (define max-p (apply max (map note-pitch tnotes)))
+    (displayln (format "Track ~a" ti))
+    (define guide (make-string total-cols #\-))
+    (for ([bc bar-cols] #:when (< bc total-cols))
+      (string-set! guide bc #\|))
+    (displayln (format "     ~a" guide))
+    (for ([p (in-range max-p (sub1 min-p) -1)])
+      (define row (make-string total-cols #\space))
+      (for ([n tnotes] #:when (= (note-pitch n) p))
+        (define start-col (inexact->exact (quotient (note-start n) ticks-per-col)))
+        (define end-col (inexact->exact (ceiling (/ (note-end n) ticks-per-col))))
+        (for ([i (in-range start-col (min end-col total-cols))])
+          (string-set! row i #\#)))
+      (for ([bc bar-cols] #:when (< bc total-cols))
+        (when (char=? (string-ref row bc) #\space)
+          (string-set! row bc #\|)))
+      (displayln (format "~a ~a" (~a (note-name p) #:width 4) row)))
+    (newline)))
+
 (define (svg-color idx)
   (define colors
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
@@ -297,15 +354,22 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg]")
-  (displayln "  --notes     Only print note-on/note-off events")
-  (displayln "  --svg PATH  Write a piano-roll SVG to PATH"))
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--ascii] [--ascii-cols N]")
+  (displayln "  --notes        Only print note-on/note-off events")
+  (displayln "  --svg PATH     Write a piano-roll SVG to PATH")
+  (displayln "  --ascii        Print a piano-roll as ASCII")
+  (displayln "  --ascii-cols N Limit ASCII columns (auto-scales time)"))
 
 (module+ main
   (define args (vector->list (current-command-line-arguments)))
   (define notes-only? (member "--notes" args))
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
+  (define ascii? (member "--ascii" args))
+  (define ascii-cols-idx (index-of args "--ascii-cols"))
+  (define ascii-cols
+    (and ascii-cols-idx
+         (string->number (list-ref args (add1 ascii-cols-idx)))))
   (define path (for/first ([a (in-list args)] #:unless (string-prefix? a "--")) a))
   (unless path
     (usage)
@@ -315,8 +379,10 @@
   (displayln (format "Format ~a, Tracks ~a, Division ~a PPQ" fmt ntrks division))
   (for ([t tracks] [i (in-naturals 0)])
     (print-track i t notes-only?))
+  (define notes (notes-from-tracks tracks))
+  (define time-sigs (time-signatures-from-tracks tracks))
   (when svg-path
-    (define notes (notes-from-tracks tracks))
-    (define time-sigs (time-signatures-from-tracks tracks))
     (write-svg svg-path notes division time-sigs)
-    (displayln (format "Wrote ~a" svg-path))))
+    (displayln (format "Wrote ~a" svg-path)))
+  (when ascii?
+    (write-ascii notes division time-sigs ascii-cols)))

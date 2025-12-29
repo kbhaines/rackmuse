@@ -115,7 +115,12 @@
      ([acc hdr]
       [lastp 0] #:result acc)
      ([n note-data])
-      (define note 127)
+      (define nd (caddr n))
+      (displayln (~a "nt:" nd ))
+      (define note
+        (cond
+          [(integer? nd) nd]
+          [else 127]))
       (define start (- (car n) lastp))
       (define len (cadr n))
       (define end (+ start len))

@@ -76,7 +76,7 @@
 (define r1 (join r1a r1b))
 (define r2 (list e er er dqr dqr qr e))
 
-(define intro-chords (list (list dbar '(b f c)) (list dbar '(c e g))))
+(define intro-chords (list (list dbar '(46 48 53)) (list dbar '(48 52 55))))
 
 ;; put some tests here
 ;; (define r1a-spans (gen-spans r1a))
@@ -91,10 +91,11 @@
 
 (define dbass (join r2 r2 r2 r2))
 (define cello (join r1 r1 r1 r1))
-(define viola (join tacet4 tacet4 r1 r1 r1 r1))
+(define viola (join tacet4 r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
-(define melody (list (cons dbarr 0) (cons dqr 0) (cons e 60) (cons e 60) (cons e 60) (cons q 65)))
+(define melody (list (cons dbarr 0) (cons dqr 0) (cons e 60) (cons e 60) (cons e 60)
+                     (cons q 65)))
 
 (define (index-spans spans posn)
   (define pp (modulo posn (span-end (last spans))))
@@ -126,7 +127,8 @@
 (make-midi-track-file "out.mid"
                       (list
                        (project-notes melody)
-                       (project-chords cello chords first)
+                       (project-chords viola chords second)
+                       (project-chords cello chords third)
                        (project-chords dbass chords first)))
 ;; (pretty-display (project-chords cello chords second))
 ;; (pretty-display (project-chords viola chords third))
