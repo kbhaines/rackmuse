@@ -318,6 +318,28 @@
     (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='0.85' stroke='#222' stroke-width='0.5'/>"
             x y w (- note-h 1) (svg-color (note-track n))))
 
+  (define (black-key? pitch)
+    (member (modulo pitch 12) '(1 3 6 8 10)))
+
+  (define (pitch-row-bands min-p max-p y0)
+    (define bands '())
+    (define lines '())
+    (for ([p (in-range max-p (sub1 min-p) -1)]
+          [i (in-naturals 0)])
+      (define y (+ y0 (* i note-h)))
+      (when (black-key? p)
+        (set! bands
+              (cons (format "<rect x='~a' y='~a' width='~a' height='~a' fill='#e6e6e6'/>"
+                            pad-x y (- width pad-x) note-h)
+                    bands)))
+      (set! lines
+            (cons (format "<line x1='~a' y1='~a' x2='~a' y2='~a' stroke='#ddd' stroke-width='1'/>"
+                          pad-x y (- width pad-x) y)
+                  lines)))
+    (string-append (string-join (reverse bands) "\n")
+                   (if (null? bands) "" "\n")
+                   (string-join (reverse lines) "\n")))
+
   (define (pitch-labels min-p max-p y0)
     (define labels '())
     (for ([p (in-range max-p (sub1 min-p) -1)])
@@ -334,10 +356,11 @@
     (define max-p (list-ref tv 3))
     (define y0 (list-ref tv 4))
     (define rects (string-join (map (λ (n) (note-rect n max-p y0)) tnotes) "\n"))
+    (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
     (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>Track ~a</text>"
                           pad-x (- y0 3) ti))
-    (string-append title "\n" labels "\n" rects))
+    (string-append title "\n" rows "\n" labels "\n" rects))
 
   (define svg
     (string-append
