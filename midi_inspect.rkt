@@ -247,7 +247,7 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs)
+(define (write-svg path notes division time-sigs unified?)
   (define px-per-tick 0.25)
   (define note-h 8)
   (define pad-x 60)
@@ -259,24 +259,34 @@
   (define (x-of tick) (+ pad-x (inexact->exact (floor (* tick px-per-tick)))))
   (define (rect w) (inexact->exact (max 1 (floor w))))
 
-  (define by-track (make-hash))
-  (for ([n notes])
-    (hash-set! by-track (note-track n) (cons n (hash-ref by-track (note-track n) '()))))
-  (define track-ids (sort (hash-keys by-track) <))
-
   (define track-views '())
-  (define y pad-y)
-  (for ([ti track-ids])
-    (define tnotes (reverse (hash-ref by-track ti)))
-    (define min-p (apply min (map note-pitch tnotes)))
-    (define max-p (apply max (map note-pitch tnotes)))
-    (define pitch-range (+ 1 (- max-p min-p)))
-    (define height (+ track-title-h (* pitch-range note-h)))
-    (define y0 (+ y track-title-h))
-    (set! track-views (cons (list ti tnotes min-p max-p y0 height) track-views))
-    (set! y (+ y height track-gap)))
-  (set! track-views (reverse track-views))
-  (define height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))
+  (define height (+ pad-y pad-y))
+  (cond
+    [unified?
+     (define min-p (if (null? notes) 0 (apply min (map note-pitch notes))))
+     (define max-p (if (null? notes) 0 (apply max (map note-pitch notes))))
+     (define pitch-range (+ 1 (- max-p min-p)))
+     (define lane-h (+ track-title-h (* pitch-range note-h)))
+     (define y0 (+ pad-y track-title-h))
+     (set! track-views (list (list 'all notes min-p max-p y0 lane-h)))
+     (set! height (+ pad-y lane-h))]
+    [else
+     (define by-track (make-hash))
+     (for ([n notes])
+       (hash-set! by-track (note-track n) (cons n (hash-ref by-track (note-track n) '()))))
+     (define track-ids (sort (hash-keys by-track) <))
+     (define y pad-y)
+     (for ([ti track-ids])
+       (define tnotes (reverse (hash-ref by-track ti)))
+       (define min-p (apply min (map note-pitch tnotes)))
+       (define max-p (apply max (map note-pitch tnotes)))
+       (define pitch-range (+ 1 (- max-p min-p)))
+       (define lane-h (+ track-title-h (* pitch-range note-h)))
+       (define y0 (+ y track-title-h))
+       (set! track-views (cons (list ti tnotes min-p max-p y0 lane-h) track-views))
+       (set! y (+ y lane-h track-gap)))
+     (set! track-views (reverse track-views))
+     (set! height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))])
 
   (define (bar-bands)
     (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
@@ -358,8 +368,9 @@
     (define rects (string-join (map (λ (n) (note-rect n max-p y0)) tnotes) "\n"))
     (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
-    (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>Track ~a</text>"
-                          pad-x (- y0 3) ti))
+    (define title-text (if (eq? ti 'all) "All tracks" (format "Track ~a" ti)))
+    (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>~a</text>"
+                          pad-x (- y0 3) title-text))
     (string-append title "\n" rows "\n" labels "\n" rects))
 
   (define svg
@@ -377,17 +388,19 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--ascii] [--ascii-cols N]")
-  (displayln "  --notes        Only print note-on/note-off events")
-  (displayln "  --svg PATH     Write a piano-roll SVG to PATH")
-  (displayln "  --ascii        Print a piano-roll as ASCII")
-  (displayln "  --ascii-cols N Limit ASCII columns (auto-scales time)"))
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--ascii] [--ascii-cols N]")
+  (displayln "  --notes         Only print note-on/note-off events")
+  (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
+  (displayln "  --svg-unified   Render a single piano roll for all tracks")
+  (displayln "  --ascii         Print a piano-roll as ASCII")
+  (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
 (module+ main
   (define args (vector->list (current-command-line-arguments)))
   (define notes-only? (member "--notes" args))
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
+  (define svg-unified? (member "--svg-unified" args))
   (define ascii? (member "--ascii" args))
   (define ascii-cols-idx (index-of args "--ascii-cols"))
   (define ascii-cols
@@ -405,7 +418,7 @@
   (define notes (notes-from-tracks tracks))
   (define time-sigs (time-signatures-from-tracks tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs)
+    (write-svg svg-path notes division time-sigs svg-unified?)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
