@@ -149,10 +149,11 @@
     (for/fold
      ([acc (bytes-append header trk0)]
       [chan 1] #:result acc)
-     ([trk tracks])
-      (displayln (bytes-length acc))
+     ([trkn tracks])
+      (define trk-name (car trkn))
+      (define trk (cdr trkn))
       (values
-       (bytes-append acc (make-note-track2 chan trk (format "track~a" chan)))
+       (bytes-append acc (make-note-track2 chan trk trk-name))
        (add1 chan))))
 
   (displayln (bytes-length file-bytes))

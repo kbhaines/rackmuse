@@ -261,6 +261,9 @@
 
   (define track-views '())
   (define height (+ pad-y pad-y))
+  (define base-height 0)
+  (define legend-h 0)
+  (define legend-ids '())
   (cond
     [unified?
      (define min-p (if (null? notes) 0 (apply min (map note-pitch notes))))
@@ -269,7 +272,9 @@
      (define lane-h (+ track-title-h (* pitch-range note-h)))
      (define y0 (+ pad-y track-title-h))
      (set! track-views (list (list 'all notes min-p max-p y0 lane-h)))
-     (set! height (+ pad-y lane-h))]
+     (set! height (+ pad-y lane-h))
+     (set! legend-ids (sort (remove-duplicates (map note-track notes)) <))
+     (set! legend-h (if (null? legend-ids) 0 (+ 10 (* (length legend-ids) 12))))]
     [else
      (define by-track (make-hash))
      (for ([n notes])
@@ -287,6 +292,7 @@
        (set! y (+ y lane-h track-gap)))
      (set! track-views (reverse track-views))
      (set! height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))])
+  (set! base-height height)
 
   (define (bar-bands)
     (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
@@ -382,6 +388,21 @@
                           pad-x (- y0 3) title-text))
     (string-append title "\n" rows "\n" labels "\n" rects))
 
+  (define (legend-block)
+    (if (or (null? legend-ids) (not unified?))
+        ""
+        (let* ([legend-x pad-x]
+               [legend-y (+ base-height 8)]
+               [items
+                (for/list ([tid legend-ids] [i (in-naturals 0)])
+                  (define y (+ legend-y (* i 12)))
+                  (format "<rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
+<text x='~a' y='~a' font-size='9' fill='#333'>Track ~a</text>"
+                          legend-x y (svg-color tid)
+                          (+ legend-x 12) (+ y 8) tid))])
+          (string-join items "\n"))))
+
+  (set! height (+ base-height legend-h))
   (define svg
     (string-append
      "<?xml version='1.0' encoding='UTF-8'?>\n"
@@ -390,6 +411,7 @@
      (format "<rect x='0' y='0' width='~a' height='~a' fill='#fafafa'/>\n" width height)
      (bar-bands) "\n"
      (grid-lines) "\n"
+     (legend-block) "\n"
      (string-join (map track-block track-views) "\n")
      "\n</svg>\n"))
   (call-with-output-file path

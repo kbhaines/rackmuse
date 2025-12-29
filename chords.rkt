@@ -127,10 +127,10 @@
 (make-midi-track-file '(6 8)
                       "out.mid"
                       (list
-                       (project-notes melody)
-                       (project-chords viola chords second)
-                       (project-chords cello chords third)
-                       (project-chords dbass chords first)))
+                       (cons "melody" (project-notes melody))
+                       (cons "viola" (project-chords viola chords second))
+                       (cons "cello" (project-chords cello chords third))
+                       (cons "dbass" (project-chords dbass chords first))))
 ;; (pretty-display (project-chords cello chords second))
 ;; (pretty-display (project-chords viola chords third))
 
