@@ -116,7 +116,7 @@
       [lastp 0] #:result acc)
      ([n note-data])
       (define nd (caddr n))
-      (displayln (~a "nt:" nd ))
+      ;; (displayln (~a "nt:" nd ))
       (define note
         (cond
           [(integer? nd) nd]
@@ -124,7 +124,7 @@
       (define start (- (car n) lastp))
       (define len (cadr n))
       (define end (+ start len))
-      (displayln (~a "note:" n "start:" start ":" end " len:" len))
+      ;; (displayln (~a "note:" n "start:" start ":" end " len:" len))
       (values
        (bytes-append acc (note-on start chan note velocity) (note-off len chan note off-vel))
        (+ (car n) len)

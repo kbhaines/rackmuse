@@ -34,20 +34,32 @@
      )
     0)
 
-;; Duration is always first
-(define chord-notes cadr)
-(define chord-duration car)
+;; The convention is that duration is always first, and the rest of the entity data is the tail or cdr
+;; of the list
 
-(define note-note cadr)
+(define (mk-chord notes duration) (cons duration notes))
+(define chord-duration car)
+(define chord-notes cadr)
+
+(define (mk-note note duration) (cons duration note))
 (define note-duration car)
+(define note-note cadr)
+
+(define (mk-span start end data) (cons (cons start end) data))
+(define span-of car)
+(define span-start caar)
+(define span-end cdar)
+(define span-data cdr)
+(define (span-length s)(- (span-end s) (span-start s)))
 
 (define (gen-spans lst [spanf identity])
 
-  ;; generates the list of spans of actual note data contained, filtering out the negative spans,
-  ;; while reflecting the space they take up in the list. The spanf function must return the
-  ;; span-length of an element of lst.
+  ;; generates the list of spans of actual note data contained, filtering out the negative spans, but
+  ;; reflecting the space they take up in the list. The spanf function must return the span-length of
+  ;; each element of lst. This is usually the 'car' of the element, by local convention.
   ;;
-  ;; The elements in the result list are ((span-start . span-end) . <original-lst-element>)
+  ;; The elements in the result list are ((span-start . span-end) . <original-lst-element>) for each
+  ;; element in lst that is not a negative span.
   ;;
 
   (for/fold
@@ -61,15 +73,49 @@
        (values end result)]
       [else
        (define end (+ acc s))
-       (values end (cons (cons (cons acc end) l) result))])))
+       (values end (cons (mk-span acc end l) result))])))
 
-(define span-of car)
-(define span-start caar)
-(define span-end cdar)
-(define span-data cdr)
-(define (span-length s)(- (span-end s) (span-start s)))
+(define (index-spans spans posn)
+
+  ;; find the span in the list of 'spans' the corresponds to posn. Uses a wrap-around (modulo)
+  ;; function such that the list of spans can be considered as an infinitely repeating loop of spans
+
+  (define pp (modulo posn (span-end (last spans))))
+  (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
+  (index-of spans pp in?))
+
+(define (project-chords rhythm chords [selector identity])
+
+  ;; given the list of rhythm spans, a note of the chords is 'projected' onto each element of the
+  ;; rhythm, at the appropriate time position. The list of chords can be shorter than the rhythm;
+  ;; index-spans is used such that the chord sequence repeats indefinitely.
+
+  (define rhythm-spans (gen-spans rhythm))
+  (define chord-spans (gen-spans chords chord-duration))
+  (for/list ([p rhythm-spans])
+    (define start (span-start p))
+    (list start
+          (span-length p)
+          (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
+
+(define (project-notes notes)
+
+  ;; converts a list of notes (which may include rests) into absolute spans, ready for midi rendering.
+
+  (define note-spans (gen-spans notes note-duration))
+  (for/list ([p note-spans])
+    (define start (span-start p))
+    (list start
+          (span-length p)
+          (cdr (span-data p)))))
 
 (define join (compose flatten append))
+
+(define (mk-track name spans) (cons name spans))
+(define track-name car)
+(define track-spans cadr)
+
+;; Here comes the tune...
 
 (define r1a (list q e er e e))
 (define r1b (list e e e e e e))
@@ -82,8 +128,6 @@
 ;; (define r1a-spans (gen-spans r1a))
 ;; (define r1b-spans (gen-spans r1b))
 
-;; (pretty-print (gen-spans (join r2 r2 r2 r2) identity))
-;; (exit 0)
 
 (define tacet1 (list dbar))
 (define tacet2 (list dbarr))
@@ -97,40 +141,18 @@
 (define melody (list (cons dbarr 0) (cons dqr 0) (cons e 60) (cons e 60) (cons e 60)
                      (cons q 65)))
 
-(define (index-spans spans posn)
-  (define pp (modulo posn (span-end (last spans))))
-  (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
-  (index-of spans pp in?))
-
-(define (project-chords rhythm chords [selector identity])
-  (define rhythm-spans (gen-spans rhythm))
-  (define chord-spans (gen-spans chords chord-duration))
-  (for/list ([p rhythm-spans])
-    (define start (span-start p))
-    (list start
-          (span-length p)
-          (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
-
-(define (project-notes notes)
-  (define note-spans (gen-spans notes note-duration))
-  (displayln note-spans)
-  (for/list ([p note-spans])
-    (define start (span-start p))
-    (list start
-          (span-length p)
-          (cdr (span-data p)))))
-
 (require "mid.rkt")
 
-(pretty-display (project-notes melody))
-(pretty-display (project-chords dbass chords first))
+;; (pretty-display (project-notes melody))
+;; (pretty-display (project-chords dbass chords first))
 (make-midi-track-file '(6 8)
                       "out.mid"
                       (list
-                       (cons "melody" (project-notes melody))
-                       (cons "viola" (project-chords viola chords second))
-                       (cons "cello" (project-chords cello chords third))
-                       (cons "dbass" (project-chords dbass chords first))))
+                       (mk-track "horns" (project-notes melody))
+                       (mk-track "viola" (project-chords viola chords second))
+                       (mk-track "cello" (project-chords cello chords third))
+                       (mk-track "dbass" (project-chords dbass chords first))))
+
 ;; (pretty-display (project-chords cello chords second))
 ;; (pretty-display (project-chords viola chords third))
 
