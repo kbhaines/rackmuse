@@ -146,6 +146,7 @@
 ;; (pretty-display (project-notes melody))
 ;; (pretty-display (project-chords dbass chords first))
 (make-midi-track-file '(6 8)
+                      '(-2 0)
                       "out.mid"
                       (list
                        (mk-track "horns" (project-notes melody))
