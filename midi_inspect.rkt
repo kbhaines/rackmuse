@@ -249,7 +249,7 @@
 
 (define (write-svg path notes division time-sigs unified?)
   (define px-per-tick 0.25)
-  (define note-h 8)
+  (define note-h 16)
   (define pad-x 60)
   (define pad-y 20)
   (define track-gap 14)
@@ -312,13 +312,22 @@
     (string-join (reverse bands) "\n"))
 
   (define (grid-lines)
-    (define step division)
+    (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
     (define lines '())
-    (for ([t (in-range 0 (+ max-tick step) step)])
-      (define x (x-of t))
-      (set! lines (cons (format "<line x1='~a' y1='~a' x2='~a' y2='~a' stroke='#eee' stroke-width='1'/>"
-                                x pad-y x (- height pad-y))
-                        lines)))
+    (define sig-count (length sigs))
+    (for ([i (in-range sig-count)])
+      (define curr (list-ref sigs i))
+      (define start (first curr))
+      (define denom (third curr))
+      (define beat-ticks (inexact->exact (/ (* division 4) denom)))
+      (define next-start
+        (if (< i (sub1 sig-count)) (first (list-ref sigs (add1 i))) max-tick))
+      (for ([t (in-range start (+ next-start beat-ticks) beat-ticks)])
+        (when (< t max-tick)
+          (define x (x-of t))
+          (set! lines (cons (format "<line x1='~a' y1='~a' x2='~a' y2='~a' stroke='#ddd' stroke-width='1'/>"
+                                    x pad-y x (- height pad-y))
+                            lines)))))
     (string-join (reverse lines) "\n"))
 
   (define (note-rect n max-p y0)
@@ -354,7 +363,7 @@
     (define labels '())
     (for ([p (in-range max-p (sub1 min-p) -1)])
       (define y (+ y0 (* (- max-p p) note-h) (- note-h 2)))
-      (set! labels (cons (format "<text x='6' y='~a' font-size='8' fill='#555'>~a</text>"
+      (set! labels (cons (format "<text x='6' y='~a' font-size='12' fill='#555'>~a</text>"
                                  y (note-name p))
                          labels)))
     (string-join (reverse labels) "\n"))

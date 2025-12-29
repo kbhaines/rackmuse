@@ -66,7 +66,7 @@
 (define tempo-us-per-q 500000)
 
 ;; ---------- track 0 (conductor/meta track) ----------
-(define (make-meta-track)
+(define (make-meta-track nn dd)
   (define data
     (bytes-append
      (track-name 0 "Conductor")
@@ -82,7 +82,7 @@
      ;;6  cc  Number of MIDI clocks in a metronome click
      ;;7  bb  Number of notated 32nd notes in a MIDI quarter note
      ;;
-     (meta 0 #x58 (bytes 6 3 24 8))
+     (meta 0 #x58 (bytes nn (inexact->exact (log dd 2)) 24 8))
      ;; Key signature: FF 59 02 sf mi  (C major => sf=0, mi=0)
      (meta 0 #x59 (bytes 0 0))
      ;; End of track
@@ -131,7 +131,7 @@
        )))
   (mtrk (bytes-append data end)))
 
-(define (make-midi-track-file path tracks)
+(define (make-midi-track-file time-sig path tracks)
   (define ntrks (+ 1 (length tracks)))
 
   ;; MIDI header: "MThd" length=6 format=1 ntrks division
@@ -142,7 +142,7 @@
                   (u16be ntrks)
                   (u16be PPQ)))
 
-  (define trk0 (make-meta-track))
+  (define trk0 (make-meta-track (car time-sig) (cadr time-sig)))
 
   ;; chord tones: C2=36, G2=43, E3=52, C4=60
   (define file-bytes

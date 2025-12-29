@@ -124,7 +124,8 @@
 
 (pretty-display (project-notes melody))
 (pretty-display (project-chords dbass chords first))
-(make-midi-track-file "out.mid"
+(make-midi-track-file '(6 8)
+                      "out.mid"
                       (list
                        (project-notes melody)
                        (project-chords viola chords second)
