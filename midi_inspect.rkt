@@ -214,6 +214,31 @@
         (set! bars (cons t bars)))))
   (sort bars <))
 
+(define (parse-bar-range s)
+  (define parts (string-split s ":" #:trim? #t))
+  (cond
+    [(= (length parts) 2)
+     (define a (string->number (first parts)))
+     (define b (string->number (second parts)))
+     (and (number? a) (number? b) (list a b))]
+    [else #f]))
+
+(define (window-from-bars bars max-tick bars-limit bar-range)
+  (define total (length bars))
+  (define (bar-start idx)
+    (if (and (>= idx 0) (< idx total)) (list-ref bars idx) 0))
+  (define (bar-end idx)
+    (if (and (>= idx 0) (< idx total)) (list-ref bars idx) max-tick))
+  (cond
+    [(and bar-range (>= (first bar-range) 1) (>= (second bar-range) (first bar-range)))
+     (define start-idx (sub1 (inexact->exact (floor (first bar-range)))))
+     (define end-idx (inexact->exact (floor (second bar-range))))
+     (values (bar-start start-idx) (bar-end end-idx))]
+    [(and bars-limit (>= bars-limit 1))
+     (define end-idx (inexact->exact (floor bars-limit)))
+     (values (bar-start 0) (bar-end end-idx))]
+    [else (values 0 max-tick)]))
+
 (define (write-ascii notes division time-sigs cols)
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define ticks-per-col
@@ -259,16 +284,24 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names)
-  (define px-per-tick 0.25)
+(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range)
   (define note-h 16)
   (define pad-x 60)
   (define pad-y 20)
   (define track-gap 14)
   (define track-title-h 12)
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
-  (define width (+ pad-x pad-x (inexact->exact (ceiling (* max-tick px-per-tick)))))
-  (define (x-of tick) (+ pad-x (inexact->exact (floor (* tick px-per-tick)))))
+  (define bars (bar-boundaries max-tick division time-sigs))
+  (define-values (window-start window-end)
+    (window-from-bars bars max-tick svg-bars svg-bar-range))
+  (define window-ticks (max 1 (- window-end window-start)))
+  (define content-width
+    (if (and svg-width (> svg-width (* 2 pad-x)))
+        (- svg-width (* 2 pad-x))
+        (inexact->exact (ceiling (* window-ticks 0.25)))))
+  (define px-per-tick (/ content-width window-ticks))
+  (define width (+ pad-x pad-x content-width))
+  (define (x-of tick) (+ pad-x (inexact->exact (floor (* (- tick window-start) px-per-tick)))))
   (define (rect w) (inexact->exact (max 1 (floor w))))
 
   (define track-views '())
@@ -307,26 +340,20 @@
   (set! base-height height)
 
   (define (bar-bands)
-    (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
     (define bands '())
-    (define sig-count (length sigs))
-    (for ([i (in-range sig-count)])
-      (define curr (list-ref sigs i))
-      (define start (first curr))
-      (define num (second curr))
-      (define denom (third curr))
-      (define bar-ticks (inexact->exact (/ (* division num 4) denom)))
-      (define next-start
-        (if (< i (sub1 sig-count)) (first (list-ref sigs (add1 i))) max-tick))
-      (for ([t (in-range start (+ next-start bar-ticks) bar-ticks)]
-            [bi (in-naturals 0)])
-        (when (and (odd? bi) (< t max-tick))
-          (define x (x-of t))
-          (define w (rect (* bar-ticks px-per-tick)))
-          (set! bands
-                (cons (format "<rect x='~a' y='~a' width='~a' height='~a' fill='#f0f0f0'/>"
-                              x pad-y w (- height pad-y))
-                      bands)))))
+    (define bar-count (length bars))
+    (for ([i (in-range bar-count)])
+      (define start (list-ref bars i))
+      (define end (if (< (add1 i) bar-count) (list-ref bars (add1 i)) max-tick))
+      (when (and (odd? i) (< start window-end) (> end window-start))
+        (define s (max start window-start))
+        (define e (min end window-end))
+        (define x (x-of s))
+        (define w (rect (* (- e s) px-per-tick)))
+        (set! bands
+              (cons (format "<rect x='~a' y='~a' width='~a' height='~a' fill='#f0f0f0'/>"
+                            x pad-y w (- height pad-y))
+                    bands))))
     (string-join (reverse bands) "\n"))
 
   (define (grid-lines)
@@ -341,7 +368,7 @@
       (define next-start
         (if (< i (sub1 sig-count)) (first (list-ref sigs (add1 i))) max-tick))
       (for ([t (in-range start (+ next-start beat-ticks) beat-ticks)])
-        (when (< t max-tick)
+        (when (and (< t max-tick) (>= t window-start) (< t window-end))
           (define x (x-of t))
           (set! lines (cons (format "<line x1='~a' y1='~a' x2='~a' y2='~a' stroke='#ddd' stroke-width='1'/>"
                                     x pad-y x (- height pad-y))
@@ -349,11 +376,17 @@
     (string-join (reverse lines) "\n"))
 
   (define (note-rect n max-p y0)
-    (define x (x-of (note-start n)))
-    (define w (rect (* (- (note-end n) (note-start n)) px-per-tick)))
-    (define y (+ y0 (* (- max-p (note-pitch n)) note-h)))
-    (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='0.85' stroke='#222' stroke-width='0.5'/>"
-            x y w (- note-h 1) (svg-color (note-track n))))
+    (define ns (note-start n))
+    (define ne (note-end n))
+    (define s (max ns window-start))
+    (define e (min ne window-end))
+    (if (>= s e)
+        ""
+        (let* ([x (x-of s)]
+               [w (rect (* (- e s) px-per-tick))]
+               [y (+ y0 (* (- max-p (note-pitch n)) note-h))])
+          (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='0.85' stroke='#222' stroke-width='0.5'/>"
+                  x y w (- note-h 1) (svg-color (note-track n))))))
 
   (define (black-key? pitch)
     (member (modulo pitch 12) '(1 3 6 8 10)))
@@ -392,7 +425,9 @@
     (define min-p (list-ref tv 2))
     (define max-p (list-ref tv 3))
     (define y0 (list-ref tv 4))
-    (define rects (string-join (map (λ (n) (note-rect n max-p y0)) tnotes) "\n"))
+    (define rects (string-join (filter (λ (s) (not (string=? s "")))
+                                       (map (λ (n) (note-rect n max-p y0)) tnotes))
+                               "\n"))
     (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
     (define tname (and (not (eq? ti 'all)) (hash-ref track-names ti #f)))
@@ -438,10 +473,13 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
+  (displayln "  --svg-width N   Target total SVG width in pixels (auto-scales time)")
+  (displayln "  --svg-bars N    Render only the first N bars")
+  (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
   (displayln "  --ascii         Print a piano-roll as ASCII")
   (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
@@ -451,6 +489,15 @@
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
   (define svg-unified? (member "--svg-unified" args))
+  (define svg-width-idx (index-of args "--svg-width"))
+  (define svg-width
+    (and svg-width-idx (string->number (list-ref args (add1 svg-width-idx)))))
+  (define svg-bars-idx (index-of args "--svg-bars"))
+  (define svg-bars
+    (and svg-bars-idx (string->number (list-ref args (add1 svg-bars-idx)))))
+  (define svg-bar-range-idx (index-of args "--svg-bar-range"))
+  (define svg-bar-range
+    (and svg-bar-range-idx (parse-bar-range (list-ref args (add1 svg-bar-range-idx)))))
   (define ascii? (member "--ascii" args))
   (define ascii-cols-idx (index-of args "--ascii-cols"))
   (define ascii-cols
@@ -469,7 +516,7 @@
   (define time-sigs (time-signatures-from-tracks tracks))
   (define track-names (track-names-from-tracks tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
