@@ -180,7 +180,6 @@
     (λ (out) (write-bytes file-bytes out))
     #:exists 'replace))
 
-(make-midi-file "poc.mid")
 (module+ main
   (make-midi-file "poc.mid")
   (displayln "Wrote poc.mid"))

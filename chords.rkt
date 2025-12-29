@@ -34,10 +34,22 @@
      )
     0)
 
+;; Duration is always first
 (define chord-notes cadr)
 (define chord-duration car)
 
+(define note-note cadr)
+(define note-duration car)
+
 (define (gen-spans lst [spanf identity])
+
+  ;; generates the list of spans of actual note data contained, filtering out the negative spans,
+  ;; while reflecting the space they take up in the list. The spanf function must return the
+  ;; span-length of an element of lst.
+  ;;
+  ;; The elements in the result list are ((span-start . span-end) . <original-lst-element>)
+  ;;
+
   (for/fold
    ([acc 0]
     [result '()] #:result (reverse result))
@@ -54,6 +66,7 @@
 (define span-of car)
 (define span-start caar)
 (define span-end cdar)
+(define span-data cdr)
 (define (span-length s)(- (span-end s) (span-start s)))
 
 (define join (compose flatten append))
@@ -65,13 +78,9 @@
 
 (define intro-chords (list (list dbar '(b f c)) (list dbar '(c e g))))
 
-(define r1a-spans (gen-spans r1a))
-(define r1b-spans (gen-spans r1b))
-
-(define (index-spans spans posn)
-  (define pp (modulo posn (span-end (last spans))))
-  (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
-  (index-of spans pp in?))
+;; put some tests here
+;; (define r1a-spans (gen-spans r1a))
+;; (define r1b-spans (gen-spans r1b))
 
 ;; (pretty-print (gen-spans (join r2 r2 r2 r2) identity))
 ;; (exit 0)
@@ -85,6 +94,13 @@
 (define viola (join tacet4 tacet4 r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
+(define melody (list (cons dbarr 0) (cons dqr 0) (cons e 60) (cons e 60) (cons e 60) (cons q 65)))
+
+(define (index-spans spans posn)
+  (define pp (modulo posn (span-end (last spans))))
+  (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
+  (index-of spans pp in?))
+
 (define (project-chords rhythm chords [selector identity])
   (define rhythm-spans (gen-spans rhythm))
   (define chord-spans (gen-spans chords chord-duration))
@@ -94,11 +110,22 @@
           (span-length p)
           (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
 
+(define (project-notes notes)
+  (define note-spans (gen-spans notes note-duration))
+  (displayln note-spans)
+  (for/list ([p note-spans])
+    (define start (span-start p))
+    (list start
+          (span-length p)
+          (cdr (span-data p)))))
+
 (require "mid.rkt")
 
+(pretty-display (project-notes melody))
 (pretty-display (project-chords dbass chords first))
 (make-midi-track-file "out.mid"
                       (list
+                       (project-notes melody)
                        (project-chords cello chords first)
                        (project-chords dbass chords first)))
 ;; (pretty-display (project-chords cello chords second))
@@ -106,10 +133,10 @@
 
 (exit 0)
 
-(map span-of r1a-spans)
-(for ([p (in-range 0 12)])
-  (displayln (index-spans r1a-spans (* e p))))
-(map span-of r1b-spans)
+;; (map span-of r1a-spans)
+;; (for ([p (in-range 0 12)])
+;;   (displayln (index-spans r1a-spans (* e p))))
+;; (map span-of r1b-spans)
 
 ;; (define (chord-at posn)
 ;;   (define spans (map span-end (gen-spans chords chord-duration)))
