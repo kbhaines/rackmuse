@@ -60,6 +60,9 @@
          (define mdata (subbytes data pos (+ pos mlen)))
          (set! pos (+ pos mlen))
          (cond
+           [(and (= meta-type #x01))
+            (define txt (bytes->string/utf-8 mdata))
+            (push! (evt abs-tick 'text #f txt #f))]
            [(and (= meta-type #x03))
             (define name (bytes->string/utf-8 mdata))
             (push! (evt abs-tick 'track-name #f name #f))]
@@ -158,6 +161,7 @@
           [(program-change) (format "program-change ch~a program ~a" chan a)]
           [(control-change) (format "control-change ch~a cc ~a val ~a" chan a b)]
           [(meta) (format "meta type 0x~x len ~a" a b)]
+          [(text) (format "text ~a" a)]
           [(track-name) (format "track-name ~a" a)]
           [(time-signature) (format "time-signature ~a/~a" a b)]
           [(sysex) (format "sysex len ~a" a)]
@@ -188,6 +192,14 @@
       (when (eq? (evt-kind e) 'time-signature)
         (set! sigs (cons (list (evt-tick e) (evt-a e) (evt-b e)) sigs)))))
   (sort sigs < #:key first))
+
+(define (text-events-from-tracks tracks)
+  (define texts '())
+  (for ([evts tracks] [ti (in-naturals 0)])
+    (for ([e evts])
+      (when (eq? (evt-kind e) 'text)
+        (set! texts (cons (list ti (evt-tick e) (evt-a e)) texts)))))
+  (sort texts < #:key second))
 
 (define (track-names-from-tracks tracks)
   (define names (make-hash))
@@ -284,12 +296,13 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range)
+(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events)
   (define note-h 16)
   (define pad-x 60)
   (define pad-y 20)
   (define track-gap 14)
   (define track-title-h 12)
+  (define text-lane-h 14)
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define bars (bar-boundaries max-tick division time-sigs))
   (define-values (window-start window-end)
@@ -314,9 +327,11 @@
      (define min-p (if (null? notes) 0 (apply min (map note-pitch notes))))
      (define max-p (if (null? notes) 0 (apply max (map note-pitch notes))))
      (define pitch-range (+ 1 (- max-p min-p)))
-     (define lane-h (+ track-title-h (* pitch-range note-h)))
+     (define lane-h (+ track-title-h text-lane-h (* pitch-range note-h)))
      (define y0 (+ pad-y track-title-h))
-     (set! track-views (list (list 'all notes min-p max-p y0 lane-h)))
+     (define text-y (+ pad-y track-title-h))
+     (define notes-y (+ text-y text-lane-h))
+     (set! track-views (list (list 'all notes min-p max-p notes-y lane-h text-y)))
      (set! height (+ pad-y lane-h))
      (set! legend-ids (sort (remove-duplicates (map note-track notes)) <))
      (set! legend-h (if (null? legend-ids) 0 (+ 10 (* (length legend-ids) 12))))]
@@ -331,9 +346,10 @@
        (define min-p (apply min (map note-pitch tnotes)))
        (define max-p (apply max (map note-pitch tnotes)))
        (define pitch-range (+ 1 (- max-p min-p)))
-       (define lane-h (+ track-title-h (* pitch-range note-h)))
-       (define y0 (+ y track-title-h))
-       (set! track-views (cons (list ti tnotes min-p max-p y0 lane-h) track-views))
+       (define lane-h (+ track-title-h text-lane-h (* pitch-range note-h)))
+       (define text-y (+ y track-title-h))
+       (define notes-y (+ text-y text-lane-h))
+       (set! track-views (cons (list ti tnotes min-p max-p notes-y lane-h text-y) track-views))
        (set! y (+ y lane-h track-gap)))
      (set! track-views (reverse track-views))
      (set! height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))])
@@ -425,6 +441,7 @@
     (define min-p (list-ref tv 2))
     (define max-p (list-ref tv 3))
     (define y0 (list-ref tv 4))
+    (define text-y (list-ref tv 6))
     (define rects (string-join (filter (λ (s) (not (string=? s "")))
                                        (map (λ (n) (note-rect n max-p y0)) tnotes))
                                "\n"))
@@ -438,7 +455,24 @@
         [else (format "Track ~a" ti)]))
     (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>~a</text>"
                           pad-x (- y0 3) title-text))
-    (string-append title "\n" rows "\n" labels "\n" rects))
+    (define text-line (text-line-block ti text-y))
+    (string-append title "\n" text-line "\n" rows "\n" labels "\n" rects))
+
+  (define (text-line-block ti text-y)
+    (define items '())
+    (for ([t text-events])
+      (define tid (first t))
+      (define tick (second t))
+      (define txt (third t))
+      (when (and (or (eq? ti 'all) (= tid ti))
+                 (>= tick window-start)
+                 (< tick window-end))
+        (define x (x-of tick))
+        (set! items
+              (cons (format "<text x='~a' y='~a' font-size='10' fill='~a'>~a</text>"
+                            x (+ text-y 10) (svg-color tid) txt)
+                    items))))
+    (string-join (reverse items) "\n"))
 
   (define (legend-block)
     (if (or (null? legend-ids) (not unified?))
@@ -515,8 +549,9 @@
   (define notes (notes-from-tracks tracks))
   (define time-sigs (time-signatures-from-tracks tracks))
   (define track-names (track-names-from-tracks tracks))
+  (define text-events (text-events-from-tracks tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))

@@ -7,9 +7,7 @@
 ;; Run: racket poc-midi.rkt
 ;; Output: poc.mid
 
-(require racket/bytes)
-
-(provide make-note-track2
+(provide make-note-track
          make-midi-track-file)
 
 ;; ---------- binary helpers ----------
@@ -51,6 +49,9 @@
 (define (note-off delta chan note vel)
   (bytes-append (vlq delta) (bytes (+ #x80 chan) note vel)))
 
+(define (midi-text delta chan text)
+  (bytes-append (vlq delta) (bytes #xFF #x01 (string-length text)) (string->bytes/utf-8 text)))
+
 ;; Optional track name meta (nice for debugging)
 (define (track-name delta s)
   (meta delta #x03 (ascii-bytes s)))
@@ -90,23 +91,7 @@
      (meta 0 #x2F #"")))
   (mtrk data))
 
-;; ---------- note tracks ----------
-(define (make-note-track track-index chan note track-label)
-  (define velocity 80)
-  (define off-vel 64)
-  (define data
-    (let loop ([i 0]
-               [acc (bytes-append (track-name 0 track-label)
-                                  (program-change 0 chan 0))]) ; Acoustic Grand Piano
-      (if (= i eighths)
-          (bytes-append acc (meta 0 #x2F #"")) ; end of track
-          (loop (add1 i)
-                (bytes-append acc
-                              (note-on 0 chan note velocity)
-                              (note-off e chan note off-vel))))))
-  (mtrk data))
-
-(define (make-note-track2 chan note-data track-label)
+(define (make-note-track chan note-data track-label)
   (define velocity 80)
   (define off-vel 64)
   (define hdr (bytes-append (track-name 0 track-label) (program-change 0 chan 0)))
@@ -118,18 +103,18 @@
      ([n note-data])
       (define nd (caddr n))
       ;; (displayln (~a "nt:" nd ))
-      (define note
-        (cond
-          [(integer? nd) nd]
-          [else 127]))
       (define start (- (car n) lastp))
       (define len (cadr n))
       (define end (+ start len))
+      (define note
+        (cond
+          [(integer? nd)
+           (bytes-append (note-on start chan nd velocity)
+                         (note-off len chan nd off-vel))]
+          [(string? nd) (midi-text start chan nd) ]
+          [else (raise (~a nd "is unknown data type"))]))
       ;; (displayln (~a "note:" n "start:" start ":" end " len:" len))
-      (values
-       (bytes-append acc (note-on start chan note velocity) (note-off len chan note off-vel))
-       (+ (car n) len)
-       )))
+      (values (bytes-append acc note) (+ (car n) len))))
   (mtrk (bytes-append data end)))
 
 (define (make-midi-track-file time-sig key-sig path tracks)
@@ -154,7 +139,7 @@
       (define trk-name (car trkn))
       (define trk (cdr trkn))
       (values
-       (bytes-append acc (make-note-track2 chan trk trk-name))
+       (bytes-append acc (make-note-track chan trk trk-name))
        (add1 chan))))
 
   (displayln (bytes-length file-bytes))

@@ -103,6 +103,7 @@
   ;; converts a list of notes (which may include rests) into absolute spans, ready for midi rendering.
 
   (define note-spans (gen-spans notes note-duration))
+  (displayln note-spans)
   (for/list ([p note-spans])
     (define start (span-start p))
     (list start
@@ -138,10 +139,11 @@
 (define viola (join tacet4 r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
-(define melody (list (cons dbarr 0) (cons dqr 0) (cons e 60) (cons e 60) (cons e 60)
+(define melody (list (cons dbarr 0) (cons dqr 0) (cons 0 "hello") (cons e 60) (cons e 60) (cons e 60)
                      (cons q 65)))
 
 (require "mid.rkt")
+(displayln (project-notes melody))
 
 ;; (pretty-display (project-notes melody))
 ;; (pretty-display (project-chords dbass chords first))
