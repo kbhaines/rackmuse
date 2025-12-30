@@ -86,9 +86,10 @@
 
 (define (project-chords rhythm chords selector [transpose identity])
 
-  ;; given the list of rhythm spans, a note of the chords is 'projected' onto each element of the
-  ;; rhythm, at the appropriate time position. The list of chords can be shorter than the rhythm;
-  ;; index-spans is used such that the chord sequence repeats indefinitely.
+  ;; given the list of rhythm lengths a note of the chords is 'projected' onto each element of the
+  ;; rhythm, at the appropriate time position. When the rhythm is negative, it defines a rest in the
+  ;; progression. The list of chords can be shorter than the rhythm; index-spans is used such that the
+  ;; chord sequence repeats indefinitely.
 
   (define rhythm-spans (gen-spans rhythm))
   (define chord-spans (gen-spans chords chord-duration))
@@ -114,7 +115,8 @@
 
 (define join (compose flatten append))
 
-(define (oct+ n) (+ 12 n))
+(define (oct+ n) (+ n 12))
+(define (oct- n) (- n 12))
 
 (define (mk-track name spans) (cons name spans))
 (define track-name car)
