@@ -296,13 +296,17 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events)
+(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones?)
   (define note-h 16)
   (define pad-x 60)
   (define pad-y 20)
   (define track-gap 14)
   (define track-title-h 12)
   (define text-lane-h 14)
+  (define (svg-escape s)
+    (define s1 (regexp-replace* #rx"&" s "&amp;"))
+    (define s2 (regexp-replace* #rx"<" s1 "&lt;"))
+    (regexp-replace* #rx">" s2 "&gt;"))
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define bars (bar-boundaries max-tick division time-sigs))
   (define-values (window-start window-end)
@@ -391,7 +395,7 @@
                             lines)))))
     (string-join (reverse lines) "\n"))
 
-  (define (note-rect n max-p y0)
+  (define (note-rect n max-p y0 pitch opacity rect-h title)
     (define ns (note-start n))
     (define ne (note-end n))
     (define s (max ns window-start))
@@ -400,9 +404,35 @@
         ""
         (let* ([x (x-of s)]
                [w (rect (* (- e s) px-per-tick))]
-               [y (+ y0 (* (- max-p (note-pitch n)) note-h))])
-          (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='0.85' stroke='#222' stroke-width='0.5'/>"
-                  x y w (- note-h 1) (svg-color (note-track n))))))
+               [row-y (+ y0 (* (- max-p pitch) note-h))]
+               [y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2))))])
+          (if title
+              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='0.5'><title>~a</title></rect>"
+                      x y w rect-h (svg-color (note-track n)) opacity (svg-escape title))
+              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='0.5'/>"
+                      x y w rect-h (svg-color (note-track n)) opacity)))))
+
+  (define (overtone-pitches base)
+    (define offsets '(12 19 24 28 31 34))
+    (for/list ([o offsets])
+      (+ base o)))
+
+  (define (note-rects n max-p y0)
+    (define base (note-pitch n))
+    (define base-h (- note-h 1))
+    (define overtone-h (max 1 (quotient base-h 2)))
+    (define rects (list (note-rect n max-p y0 base 0.85 base-h #f)))
+    (if (and svg-overtones? (<= base 72))
+        (append
+         rects
+         (for/list ([p (overtone-pitches base)]
+                    [i (in-naturals 0)]
+                    #:when (<= p 77))
+           (define tid (note-track n))
+           (define tname (hash-ref track-names tid #f))
+           (define label (if tname tname (format "Track ~a" tid)))
+           (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h label)))
+        rects))
 
   (define (black-key? pitch)
     (member (modulo pitch 12) '(1 3 6 8 10)))
@@ -442,9 +472,11 @@
     (define max-p (list-ref tv 3))
     (define y0 (list-ref tv 4))
     (define text-y (list-ref tv 6))
-    (define rects (string-join (filter (λ (s) (not (string=? s "")))
-                                       (map (λ (n) (note-rect n max-p y0)) tnotes))
-                               "\n"))
+    (define rects
+      (string-join
+       (filter (λ (s) (not (string=? s "")))
+               (apply append (map (λ (n) (note-rects n max-p y0)) tnotes)))
+       "\n"))
     (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
     (define tname (and (not (eq? ti 'all)) (hash-ref track-names ti #f)))
@@ -502,13 +534,14 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
   (displayln "  --svg-width N   Target total SVG width in pixels (auto-scales time)")
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
+  (displayln "  --svg-overtones Show first 6 overtones (up to F5, if base <= C5)")
   (displayln "  --ascii         Print a piano-roll as ASCII")
   (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
@@ -518,6 +551,7 @@
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
   (define svg-unified? (member "--svg-unified" args))
+  (define svg-overtones? (member "--svg-overtones" args))
   (define svg-width-idx (index-of args "--svg-width"))
   (define svg-width
     (and svg-width-idx (string->number (list-ref args (add1 svg-width-idx)))))
@@ -546,7 +580,7 @@
   (define track-names (track-names-from-tracks tracks))
   (define text-events (text-events-from-tracks tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones?)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
