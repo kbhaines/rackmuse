@@ -455,24 +455,7 @@
         [else (format "Track ~a" ti)]))
     (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>~a</text>"
                           pad-x (- y0 3) title-text))
-    (define text-line (text-line-block ti text-y))
-    (string-append title "\n" text-line "\n" rows "\n" labels "\n" rects))
-
-  (define (text-line-block ti text-y)
-    (define items '())
-    (for ([t text-events])
-      (define tid (first t))
-      (define tick (second t))
-      (define txt (third t))
-      (when (and (or (eq? ti 'all) (= tid ti))
-                 (>= tick window-start)
-                 (< tick window-end))
-        (define x (x-of tick))
-        (set! items
-              (cons (format "<text x='~a' y='~a' font-size='10' fill='~a'>~a</text>"
-                            x (+ text-y 10) (svg-color tid) txt)
-                    items))))
-    (string-join (reverse items) "\n"))
+    (string-append title "\n" rows "\n" labels "\n" rects))
 
   (define (legend-block)
     (if (or (null? legend-ids) (not unified?))
@@ -484,10 +467,22 @@
                   (define y (+ legend-y (* i 12)))
                   (define tname (hash-ref track-names tid #f))
                   (define label (if tname (format "Track ~a: ~a" tid tname) (format "Track ~a" tid)))
-                  (format "<rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
-<text x='~a' y='~a' font-size='9' fill='#333'>~a</text>"
-                          legend-x y (svg-color tid)
-                          (+ legend-x 12) (+ y 8) label))])
+                  (define text-items
+                    (for/list ([t text-events]
+                               #:when (and (= (first t) tid)
+                                           (>= (second t) window-start)
+                                           (< (second t) window-end)))
+                      (define x (x-of (second t)))
+                      (define txt (third t))
+                      (format "<text x='~a' y='~a' font-size='12' fill='~a'>~a</text>"
+                              x (+ y 8) (svg-color tid) txt)))
+                  (string-append
+                   (format "<rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
+<text x='~a' y='~a' font-size='12' fill='#333'>~a</text>"
+                           legend-x y (svg-color tid)
+                           (+ legend-x 12) (+ y 8) label)
+                   "\n"
+                   (string-join text-items "\n")))])
           (string-join items "\n"))))
 
   (set! height (+ base-height legend-h))

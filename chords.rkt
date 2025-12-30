@@ -84,7 +84,7 @@
   (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
   (index-of spans pp in?))
 
-(define (project-chords rhythm chords [selector identity])
+(define (project-chords rhythm chords selector [transpose identity])
 
   ;; given the list of rhythm spans, a note of the chords is 'projected' onto each element of the
   ;; rhythm, at the appropriate time position. The list of chords can be shorter than the rhythm;
@@ -94,11 +94,12 @@
   (define chord-spans (gen-spans chords chord-duration))
   (for/list ([p rhythm-spans])
     (define start (span-start p))
-    (list start
-          (span-length p)
-          (selector (chord-notes (list-ref chords (index-spans chord-spans start)))))))
+    (define data (transpose
+                  (selector
+                   (chord-notes (list-ref chords (index-spans chord-spans start))))))
+    (list start (span-length p) data)))
 
-(define (project-notes notes)
+(define (project-notes notes [transpose identity])
 
   ;; converts a list of notes (which may include rests) into absolute spans, ready for midi rendering.
 
@@ -106,11 +107,14 @@
   (displayln note-spans)
   (for/list ([p note-spans])
     (define start (span-start p))
+    (define data (cdr (span-data p)))
     (list start
           (span-length p)
-          (cdr (span-data p)))))
+          (if (number? data) (transpose data) data))))
 
 (define join (compose flatten append))
+
+(define (oct+ n) (+ 12 n))
 
 (define (mk-track name spans) (cons name spans))
 (define track-name car)
@@ -139,7 +143,7 @@
 (define viola (join tacet4 r1 r1 r1 r1))
 (define chords (append intro-chords intro-chords))
 
-(define melody (list (cons dbarr 0) (cons dqr 0) (cons 0 "hello") (cons e 60) (cons e 60) (cons e 60)
+(define melody (list (cons dbarr 0) (cons dqr 0) (cons 0 "Main Melody") (cons e 60) (cons e 60) (cons e 60)
                      (cons q 65)))
 
 (require "mid.rkt")
@@ -152,7 +156,8 @@
                       "out.mid"
                       (list
                        (mk-track "horns" (project-notes melody))
-                       (mk-track "viola" (project-chords viola chords second))
+                       (mk-track "horns2" (project-notes melody oct+))
+                       (mk-track "viola" (project-chords viola chords second oct+))
                        (mk-track "cello" (project-chords cello chords third))
                        (mk-track "dbass" (project-chords dbass chords first))))
 
