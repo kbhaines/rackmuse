@@ -307,6 +307,7 @@
   (define strings-color "#c99762")
   (define woodwind-color "#2b7a5a")
   (define shade-step 0.04)
+  (define shade-floor 0.8)
   (define shade-map (make-hash))
   (define order-map (make-hash))
   (define (svg-escape s)
@@ -336,24 +337,31 @@
     (define b (* (third rgb) factor))
     (rgb->hex r g b))
 
-  (define (track-base-color tid)
+  (define (track-group tid)
     (define name (string-downcase (hash-ref track-names tid "")))
     (cond
       [(or (string-contains? name "trombone")
            (string-contains? name "trumpet")
            (string-contains? name "horn")
            (string-contains? name "tuba"))
-       brass-color]
+       'brass]
       [(or (string-contains? name "violin")
            (string-contains? name "viola")
            (string-contains? name "cello")
            (string-contains? name "bass"))
-       strings-color]
+       'strings]
       [(or (string-contains? name "flute")
            (string-contains? name "oboe")
            (string-contains? name "clarinet")
            (string-contains? name "bassoon"))
-       woodwind-color]
+       'woodwind]
+      [else 'other]))
+
+  (define (track-base-color tid)
+    (case (track-group tid)
+      [(brass) brass-color]
+      [(strings) strings-color]
+      [(woodwind) woodwind-color]
       [else (svg-color tid)]))
 
   (define (track-color tid)
@@ -411,8 +419,12 @@
      (set! height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))])
   (set! base-height height)
   (define track-order (if unified? legend-ids (map first track-views)))
+  (define group-counts (make-hash))
   (for ([tid track-order] [i (in-naturals 0)])
-    (hash-set! shade-map tid (max 0.4 (- 1.0 (* shade-step i))))
+    (define grp (track-group tid))
+    (define gi (hash-ref group-counts grp 0))
+    (hash-set! group-counts grp (add1 gi))
+    (hash-set! shade-map tid (max shade-floor (- 1.0 (* shade-step gi))))
     (hash-set! order-map tid i))
 
   (define (bar-bands)

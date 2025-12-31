@@ -88,8 +88,8 @@
  '(-2 0)
  "b-section.mid"
  (list
-  (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
-  (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
+  ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
+  ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
   (mk-track "Trombone1" (project-chords trombones-b b-chords second oct+))
   (mk-track "Trombone2" (project-chords trombones-b b-chords third))
   (mk-track "Trombone3" (project-chords trombones-b b-chords first))
