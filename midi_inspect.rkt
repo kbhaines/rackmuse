@@ -395,6 +395,17 @@
                             lines)))))
     (string-join (reverse lines) "\n"))
 
+  (define (rect-y max-p y0 pitch rect-h)
+    (define row-y (+ y0 (* (- max-p pitch) note-h)))
+    (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2)))))
+
+  (define (rect-at x y w h color opacity title)
+    (if title
+        (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'><title>~a</title></rect>"
+                x y w h color opacity (svg-escape title))
+        (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'/>"
+                x y w h color opacity)))
+
   (define (note-rect n max-p y0 pitch opacity rect-h title)
     (define ns (note-start n))
     (define ne (note-end n))
@@ -404,13 +415,8 @@
         ""
         (let* ([x (x-of s)]
                [w (rect (* (- e s) px-per-tick))]
-               [row-y (+ y0 (* (- max-p pitch) note-h))]
-               [y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2))))])
-          (if title
-              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'><title>~a</title></rect>"
-                      x y w rect-h (svg-color (note-track n)) opacity (svg-escape title))
-              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'/>"
-                      x y w rect-h (svg-color (note-track n)) opacity)))))
+               [y (rect-y max-p y0 pitch rect-h)])
+          (rect-at x y w rect-h (svg-color (note-track n)) opacity title))))
 
   (define (overtone-pitches base)
     (define offsets '(12 19 24 28 31 34))
@@ -434,6 +440,53 @@
              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
            (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h label)))
         rects))
+
+  (define (unified-rects tnotes max-p y0)
+    (define descs '())
+    (for ([n tnotes])
+      (define ns (note-start n))
+      (define ne (note-end n))
+      (define s (max ns window-start))
+      (define e (min ne window-end))
+      (when (< s e)
+        (define tid (note-track n))
+        (define base (note-pitch n))
+        (define base-h (- note-h 1))
+        (define tname (hash-ref track-names tid #f))
+        (define label (if tname tname (format "Track ~a" tid)))
+        (set! descs (cons (list tid base s e 0.85 base-h #f) descs))
+        (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
+          (for ([p (overtone-pitches base)]
+                [i (in-naturals 0)]
+                #:when (and (< i overtone-count) (<= p 77)))
+            (define overtone-h
+              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
+            (set! descs (cons (list tid p s e (- 0.4 (* 0.05 i)) overtone-h label) descs))))))
+    (define groups (make-hash))
+    (for ([d descs])
+      (define key (list (second d) (third d) (fourth d)))
+      (hash-set! groups key (cons d (hash-ref groups key '()))))
+    (define out '())
+    (for ([key (in-list (hash-keys groups))])
+      (define group (reverse (hash-ref groups key)))
+      (define pitch (first key))
+      (define s (second key))
+      (define e (third key))
+      (define count (length group))
+      (define base-x (+ pad-x (* (- s window-start) (exact->inexact px-per-tick))))
+      (define total-w (* (- e s) (exact->inexact px-per-tick)))
+      (define row-y (+ y0 (* (- max-p pitch) note-h)))
+      (for ([d group] [i (in-naturals 0)])
+        (define tid (first d))
+        (define opacity (list-ref d 4))
+        (define rect-h (list-ref d 5))
+        (define title (list-ref d 6))
+        (define slice-h (/ (exact->inexact (max 1 rect-h)) (max 1 count)))
+        (define base-y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2)))))
+        (define y (+ base-y (* i slice-h)))
+        (define h (max 1 slice-h))
+        (set! out (cons (rect-at base-x y (max 1 total-w) h (svg-color tid) opacity title) out))))
+    (string-join (reverse out) "\n"))
 
   (define (black-key? pitch)
     (member (modulo pitch 12) '(1 3 6 8 10)))
@@ -474,10 +527,12 @@
     (define y0 (list-ref tv 4))
     (define text-y (list-ref tv 6))
     (define rects
-      (string-join
-       (filter (λ (s) (not (string=? s "")))
-               (apply append (map (λ (n) (note-rects n max-p y0)) tnotes)))
-       "\n"))
+      (if (and unified? (eq? ti 'all))
+          (unified-rects tnotes max-p y0)
+          (string-join
+           (filter (λ (s) (not (string=? s "")))
+                   (apply append (map (λ (n) (note-rects n max-p y0)) tnotes)))
+           "\n")))
     (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
     (define tname (and (not (eq? ti 'all)) (hash-ref track-names ti #f)))
