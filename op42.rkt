@@ -48,12 +48,12 @@
 
 (define b-chords
   (list
-   (list bars4 (list g3 bf3 d4)) ;; Gm
-   (list dbar (list g3 bf3 ef4)) ;; Eb/G
-   (list dbar (list f3 bf3 d4)) ;; Bb/F
-   (list bars4 (list g3 bf3 d4)) ;; Gm
-   (list dbar (list g3 bf3 ef4)) ;; Eb/G
-   (list dbar (list f3 a3 c3)) ;; F
+   (list bars4 (list g2 bf2 d3)) ;; Gm
+   (list dbar (list g2 bf2 ef3)) ;; Eb/G
+   (list dbar (list f2 bf2 d3)) ;; Bb/F
+   (list bars4 (list g2 bf2 d3)) ;; Gm
+   (list dbar (list g2 bf2 ef3)) ;; Eb/G
+   (list dbar (list f2 a2 c3)) ;; F
    ))
 
 (define violins-b
@@ -88,11 +88,11 @@
  '(-2 0)
  "b-section.mid"
  (list
-  (mk-track "Trombone1" (project-chords trombones-b b-chords second))
+  (mk-track "Trombone1" (project-chords trombones-b b-chords second oct+))
   (mk-track "Trombone2" (project-chords trombones-b b-chords third))
-  (mk-track "Trombone2" (project-chords trombones-b b-chords first))
-  (mk-track "Violins-II" (project-chords violins-b b-chords third))
-  (mk-track "Viola" (project-chords viola-b b-chords second))
+  (mk-track "Trombone3" (project-chords trombones-b b-chords first))
+  (mk-track "Violins-II" (project-chords violins-b b-chords third oct+))
+  (mk-track "Viola" (project-chords viola-b b-chords second oct+))
   (mk-track "Cello" (project-chords cello-b b-chords first))
   (mk-track "Dbass" (project-chords dbass-b b-chords first oct-))))
 
