@@ -16,17 +16,20 @@
 ;; (define r1b-spans (gen-spans r1b))
 
 (define dbass (join r2 r2 r2 r2))
-(define cello (join r1a r1a r1a r1a))
-(define viola (join r1a r1a r1a r1a))
+(define cello (join r1a r1a r1a r1a r1a r1a r1a r1a))
+(define viola (join r1 r1 r1 r1))
 (define chords (append a-chords a-chords))
 
 (define melody
-  (list (cons dqr 0) (cons qr 0)
+  (list (cons barr 0)
+        (cons dqr 0) (cons qr 0)
         (cons 0 "Main Melody")
         (cons e c4)
         (cons (+ dq e) c4) (cons er 0) (cons e f4)
         (cons (+ dq e) f4) (cons er 0) (cons e bf4)
         (cons dq bf4) (cons dq a4)
+        (cons dq g4) (cons dq f4)
+        (cons dh c4) (cons barr 0)
         ))
 
 (require "mid.rkt")

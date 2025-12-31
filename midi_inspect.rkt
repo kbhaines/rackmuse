@@ -296,7 +296,7 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones?)
+(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events overtone-count)
   (define note-h 16)
   (define pad-x 60)
   (define pad-y 20)
@@ -407,9 +407,9 @@
                [row-y (+ y0 (* (- max-p pitch) note-h))]
                [y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2))))])
           (if title
-              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='0.5'><title>~a</title></rect>"
+              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'><title>~a</title></rect>"
                       x y w rect-h (svg-color (note-track n)) opacity (svg-escape title))
-              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='0.5'/>"
+              (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'/>"
                       x y w rect-h (svg-color (note-track n)) opacity)))))
 
   (define (overtone-pitches base)
@@ -421,12 +421,12 @@
     (define base (note-pitch n))
     (define base-h (- note-h 1))
     (define rects (list (note-rect n max-p y0 base 0.85 base-h #f)))
-    (if (and svg-overtones? (<= base 72))
+    (if (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
         (append
          rects
          (for/list ([p (overtone-pitches base)]
                     [i (in-naturals 0)]
-                    #:when (<= p 77))
+                    #:when (and (< i overtone-count) (<= p 77)))
            (define tid (note-track n))
            (define tname (hash-ref track-names tid #f))
            (define label (if tname tname (format "Track ~a" tid)))
@@ -535,14 +535,14 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
   (displayln "  --svg-width N   Target total SVG width in pixels (auto-scales time)")
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
-  (displayln "  --svg-overtones Show first 6 overtones (up to F5, if base <= C5)")
+  (displayln "  --svg-overtones N Show N overtones (1-6, up to F5, if base <= C5)")
   (displayln "  --ascii         Print a piano-roll as ASCII")
   (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
@@ -552,7 +552,10 @@
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
   (define svg-unified? (member "--svg-unified" args))
-  (define svg-overtones? (member "--svg-overtones" args))
+  (define svg-overtones-idx (index-of args "--svg-overtones"))
+  (define svg-overtones
+    (let ([v (and svg-overtones-idx (string->number (list-ref args (add1 svg-overtones-idx))))])
+      (and v (min 6 (max 1 v)))))
   (define svg-width-idx (index-of args "--svg-width"))
   (define svg-width
     (and svg-width-idx (string->number (list-ref args (add1 svg-width-idx)))))
@@ -581,7 +584,7 @@
   (define track-names (track-names-from-tracks tracks))
   (define text-events (text-events-from-tracks tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones?)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
