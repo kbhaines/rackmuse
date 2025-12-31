@@ -6,6 +6,8 @@
  e er
  bar barr dbar dbarr
 
+ repeat
+
  mk-chord chord-notes chord-duration
  mk-note note-note note-duration
 
@@ -51,6 +53,8 @@
 (define tacet1 (list dbar))
 (define tacet2 (list dbarr))
 (define tacet4 (list dbarr dbarr))
+
+(define (repeat n . ls) (flatten (make-list n (list ls))))
 
 (define-values
   (c0 cs0 df0 d0 ds0 ef0 e0 f0 fs0 gf0 g0 gs0 af0 a0 as0 bf0 b0

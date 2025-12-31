@@ -7,8 +7,6 @@
 (define r1 (join r1a r1b))
 (define r2 (list e er er dqr dqr qr e))
 
-(define intro-chords (list (list dbar '(46 48 53)) (list dbar '(48 52 55))))
-
 (define a-chords (list (list dbar (list bf2 c3 f3))))
 
 ;; put some tests here
@@ -39,10 +37,62 @@
 ;; (pretty-display (project-chords dbass chords first))
 (make-midi-track-file '(6 8)
                       '(-2 0)
-                      "out.mid"
+                      "intro.mid"
                       (list
                        (mk-track "horns" (project-notes melody))
                        (mk-track "viola" (project-chords viola chords third))
                        (mk-track "cello" (project-chords cello chords first))
                        (mk-track "dbass" (project-chords dbass chords first oct-))))
+
+(define bars4 (* 2 dbar))
+
+(define b-chords
+  (list
+   (list bars4 (list g3 bf3 d4)) ;; Gm
+   (list dbar (list g3 bf3 ef4)) ;; Eb/G
+   (list dbar (list f3 bf3 d4)) ;; Bb/F
+   (list bars4 (list g3 bf3 d4)) ;; Gm
+   (list dbar (list g3 bf3 ef4)) ;; Eb/G
+   (list dbar (list f3 a3 c3)) ;; F
+   ))
+
+(define violins-b
+  (list
+   e er e er e e
+   e er e er e e
+   e er e er e e
+   e er e er e e
+   q e er e e
+   q e er e e
+   q e er e e
+   q e er e e))
+
+(define viola-b violins-b)
+(define cello-b violins-b)
+
+(define dbass-b
+  (repeat 8
+          e qr e qr
+          e qr qr e
+          ))
+
+(define trombones-b
+  (append
+   (repeat 4 er e e e qr)
+   (repeat 2 q e er e e)
+   (list (+ dq q) er)
+   (list e e e e e e)))
+
+(make-midi-track-file
+ '(6 8)
+ '(-2 0)
+ "b-section.mid"
+ (list
+  (mk-track "Trombone1" (project-chords trombones-b b-chords second))
+  (mk-track "Trombone2" (project-chords trombones-b b-chords third))
+  (mk-track "Trombone2" (project-chords trombones-b b-chords first))
+  (mk-track "Violins-II" (project-chords violins-b b-chords third))
+  (mk-track "Viola" (project-chords viola-b b-chords second))
+  (mk-track "Cello" (project-chords cello-b b-chords first))
+  (mk-track "Dbass" (project-chords dbass-b b-chords first oct-))))
 
