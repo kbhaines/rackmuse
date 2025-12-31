@@ -235,6 +235,32 @@
      (and (number? a) (number? b) (list a b))]
     [else #f]))
 
+(define (parse-track-list s)
+  (define parts (string-split s "," #:trim? #t))
+  (define (to-int v)
+    (and v (inexact->exact (floor v))))
+  (define (parse-token t)
+    (define tok (string-trim t))
+    (cond
+      [(string-contains? tok "-")
+       (define bits (string-split tok "-" #:trim? #t))
+       (and (= (length bits) 2)
+            (let* ([a (to-int (string->number (first bits)))]
+                   [b (to-int (string->number (second bits)))])
+              (and (number? a) (number? b)
+                   (if (<= a b)
+                       (range a (add1 b))
+                       (range b (add1 a))))))]
+      [else
+       (define n (to-int (string->number tok)))
+       (and (number? n) (list n))]))
+  (define nums
+    (apply append
+           (for/list ([p parts])
+             (define v (parse-token p))
+             (if v v '()))))
+  (and (pair? nums) (remove-duplicates nums)))
+
 (define (window-from-bars bars max-tick bars-limit bar-range)
   (define total (length bars))
   (define (bar-start idx)
@@ -679,7 +705,7 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--track-only LIST] [--track-except LIST] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
@@ -687,6 +713,8 @@
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
   (displayln "  --svg-overtones N Show N overtones (1-6, up to F5, if base <= C5)")
+  (displayln "  --track-only LIST   Include only track numbers (e.g., 0,2,4 or 1-3)")
+  (displayln "  --track-except LIST Exclude track numbers (e.g., 1,3 or 2-5)")
   (displayln "  --ascii         Print a piano-roll as ASCII")
   (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
@@ -709,6 +737,12 @@
   (define svg-bar-range-idx (index-of args "--svg-bar-range"))
   (define svg-bar-range
     (and svg-bar-range-idx (parse-bar-range (list-ref args (add1 svg-bar-range-idx)))))
+  (define track-only-idx (index-of args "--track-only"))
+  (define track-only
+    (and track-only-idx (parse-track-list (list-ref args (add1 track-only-idx)))))
+  (define track-except-idx (index-of args "--track-except"))
+  (define track-except
+    (and track-except-idx (parse-track-list (list-ref args (add1 track-except-idx)))))
   (define ascii? (member "--ascii" args))
   (define ascii-cols-idx (index-of args "--ascii-cols"))
   (define ascii-cols
@@ -720,13 +754,20 @@
     (exit 1))
 
   (define-values (fmt ntrks division tracks) (parse-midi path))
+  (define track-filter
+    (cond
+      [track-only (λ (i) (member i track-only))]
+      [track-except (λ (i) (not (member i track-except)))]
+      [else (λ (i) #t)]))
+  (define filtered-tracks
+    (for/list ([t tracks] [i (in-naturals 0)] #:when (track-filter i)) t))
   (displayln (format "Format ~a, Tracks ~a, Division ~a PPQ" fmt ntrks division))
-  (for ([t tracks] [i (in-naturals 0)])
+  (for ([t filtered-tracks] [i (in-naturals 0)])
     (print-track i t notes-only?))
-  (define notes (notes-from-tracks tracks))
-  (define time-sigs (time-signatures-from-tracks tracks))
-  (define track-names (track-names-from-tracks tracks))
-  (define text-events (text-events-from-tracks tracks))
+  (define notes (notes-from-tracks filtered-tracks))
+  (define time-sigs (time-signatures-from-tracks filtered-tracks))
+  (define track-names (track-names-from-tracks filtered-tracks))
+  (define text-events (text-events-from-tracks filtered-tracks))
   (when svg-path
     (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones)
     (displayln (format "Wrote ~a" svg-path)))
