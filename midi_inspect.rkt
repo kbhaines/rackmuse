@@ -426,16 +426,16 @@
   (define (note-rects n max-p y0)
     (define base (note-pitch n))
     (define base-h (- note-h 1))
-    (define rects (list (note-rect n max-p y0 base 0.85 base-h #f)))
+    (define tid (note-track n))
+    (define tname (hash-ref track-names tid #f))
+    (define label (if tname tname (format "Track ~a" tid)))
+    (define rects (list (note-rect n max-p y0 base 0.85 base-h label)))
     (if (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
         (append
          rects
          (for/list ([p (overtone-pitches base)]
                     [i (in-naturals 0)]
                     #:when (and (< i overtone-count) (<= p 77)))
-           (define tid (note-track n))
-           (define tname (hash-ref track-names tid #f))
-           (define label (if tname tname (format "Track ~a" tid)))
            (define overtone-h
              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
            (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h label)))
@@ -454,7 +454,7 @@
         (define base-h (- note-h 1))
         (define tname (hash-ref track-names tid #f))
         (define label (if tname tname (format "Track ~a" tid)))
-        (set! descs (cons (list tid base s e 0.85 base-h #f) descs))
+        (set! descs (cons (list tid base s e 0.85 base-h label) descs))
         (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
           (for ([p (overtone-pitches base)]
                 [i (in-naturals 0)]
