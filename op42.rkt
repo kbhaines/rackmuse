@@ -86,7 +86,7 @@
 (define cello-b violins-b)
 
 (define dbass-b
-  (repeat 8
+  (repeat 4
           e qr e qr
           e qr qr e
           ))
@@ -105,12 +105,14 @@
  (list
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
-  (mk-track "Trumpet1" (project-notes melody-b))
-  (mk-track "Trombone1" (project-chords trombones-b chords-b second oct+))
-  (mk-track "Trombone2" (project-chords trombones-b chords-b third))
-  (mk-track "Trombone3" (project-chords trombones-b chords-b first))
-  (mk-track "Violins-II" (project-chords violins-b chords-b third oct+))
-  (mk-track "Viola" (project-chords viola-b chords-b second oct+))
-  (mk-track "Cello" (project-chords cello-b chords-b first))
-  (mk-track "Dbass" (project-chords dbass-b chords-b first oct-))))
+  (mk-track "Trumpet 1" (project-notes melody-b))
+  (mk-track "Horn 1" (project-notes melody-b oct-))
+  (mk-track "Horn 2" (project-notes melody-b oct-))
+  (mk-track "Trombone 1" (project-chords trombones-b chords-b second oct+))
+  (mk-track "Trombone 2" (project-chords trombones-b chords-b third))
+  (mk-track "Trombone 3" (project-chords trombones-b chords-b first))
+  (mk-track "Violins 2" (project-chords violins-b chords-b third oct+))
+  (mk-track "Violas" (project-chords viola-b chords-b second oct+))
+  (mk-track "Cellos" (project-chords cello-b chords-b first))
+  (mk-track "Double Bass" (project-chords dbass-b chords-b first oct-))))
 
