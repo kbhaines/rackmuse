@@ -1,10 +1,11 @@
 #lang racket
 
 (provide
+ w wr dw dwr
  h hr dh dhr
  q qr dq dqr
  e er
- bar barr dbar dbarr
+ ;; bar barr dbar dbarr
 
  repeat
 
@@ -35,6 +36,11 @@
 
 (define PPQ 480)
 
+(define w (* 4 PPQ))
+(define wr (- 0 w))
+(define dw (* 3 (/ w 2)))
+(define dwr (- 0 dw))
+
 (define h (* 2 PPQ))
 (define hr (- 0 h))
 (define dh (* 3 (/ h 2)))
@@ -47,14 +53,14 @@
 (define e (/ q 2))
 (define er (- 0 e))
 
-(define bar (* 3 q))
-(define barr (- 0 bar))
-(define dbar (* 2 bar))
-(define dbarr (- 0 dbar))
-
-(define tacet1 (list dbar))
-(define tacet2 (list dbarr))
-(define tacet4 (list dbarr dbarr))
+;; (define bar (* 3 q))
+;; (define barr (- 0 bar))
+;; (define dbar (* 2 bar))
+;; (define dbarr (- 0 dbar))
+;;
+;; (define tacet1 (list dbar))
+;; (define tacet2 (list dbarr))
+;; (define tacet4 (list dbarr dbarr))
 
 (define (repeat n . ls) (flatten (make-list n (list ls))))
 

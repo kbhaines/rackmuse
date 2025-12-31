@@ -7,6 +7,11 @@
 (define r1 (join r1a r1b))
 (define r2 (list e er er dqr dqr qr e))
 
+(define bar (* 6 e))
+(define barr (- 0 bar))
+(define dbar (* 2 bar))
+(define dbarr (- 0 dbar))
+
 (define a-chords (list (list dbar (list bf2 c3 f3))))
 
 ;; put some tests here
@@ -46,7 +51,17 @@
 
 (define bars4 (* 2 dbar))
 
-(define b-chords
+(define melody-b
+  (list
+   (cons dq bf4) (cons er 0) (cons e bf4) (cons e c5)
+   (cons h bf4) (cons er 0) (cons e g4)
+   (cons dq ef5) (cons dq d5)
+   (cons h c5) (cons q bf4)
+   (cons (+ dh h) f4) (cons er 0) (cons e a4)
+   (cons dh bf4) (cons er 0)
+   ))
+
+(define chords-b
   (list
    (list bars4 (list g2 bf2 d3)) ;; Gm
    (list dbar (list g2 bf2 ef3)) ;; Eb/G
@@ -90,11 +105,12 @@
  (list
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
-  (mk-track "Trombone1" (project-chords trombones-b b-chords second oct+))
-  (mk-track "Trombone2" (project-chords trombones-b b-chords third))
-  (mk-track "Trombone3" (project-chords trombones-b b-chords first))
-  (mk-track "Violins-II" (project-chords violins-b b-chords third oct+))
-  (mk-track "Viola" (project-chords viola-b b-chords second oct+))
-  (mk-track "Cello" (project-chords cello-b b-chords first))
-  (mk-track "Dbass" (project-chords dbass-b b-chords first oct-))))
+  (mk-track "Trumpet1" (project-notes melody-b))
+  (mk-track "Trombone1" (project-chords trombones-b chords-b second oct+))
+  (mk-track "Trombone2" (project-chords trombones-b chords-b third))
+  (mk-track "Trombone3" (project-chords trombones-b chords-b first))
+  (mk-track "Violins-II" (project-chords violins-b chords-b third oct+))
+  (mk-track "Viola" (project-chords viola-b chords-b second oct+))
+  (mk-track "Cello" (project-chords cello-b chords-b first))
+  (mk-track "Dbass" (project-chords dbass-b chords-b first oct-))))
 
