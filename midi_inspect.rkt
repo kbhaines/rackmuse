@@ -303,10 +303,33 @@
   (define track-gap 14)
   (define track-title-h 12)
   (define text-lane-h 14)
+  (define brass-color "#c7c962")
+  (define strings-color "#c99762")
+  (define woodwind-color "#2b7a5a")
   (define (svg-escape s)
     (define s1 (regexp-replace* #rx"&" s "&amp;"))
     (define s2 (regexp-replace* #rx"<" s1 "&lt;"))
     (regexp-replace* #rx">" s2 "&gt;"))
+
+  (define (track-color tid)
+    (define name (string-downcase (hash-ref track-names tid "")))
+    (cond
+      [(or (string-contains? name "trombone")
+           (string-contains? name "trumpet")
+           (string-contains? name "horn")
+           (string-contains? name "tuba"))
+       brass-color]
+      [(or (string-contains? name "violin")
+           (string-contains? name "viola")
+           (string-contains? name "cello")
+           (string-contains? name "bass"))
+       strings-color]
+      [(or (string-contains? name "flute")
+           (string-contains? name "oboe")
+           (string-contains? name "clarinet")
+           (string-contains? name "bassoon"))
+       woodwind-color]
+      [else (svg-color tid)]))
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define bars (bar-boundaries max-tick division time-sigs))
   (define-values (window-start window-end)
@@ -416,7 +439,7 @@
         (let* ([x (x-of s)]
                [w (rect (* (- e s) px-per-tick))]
                [y (rect-y max-p y0 pitch rect-h)])
-          (rect-at x y w rect-h (svg-color (note-track n)) opacity title))))
+          (rect-at x y w rect-h (track-color (note-track n)) opacity title))))
 
   (define (overtone-pitches base)
     (define offsets '(12 19 24 28 31 34))
@@ -485,7 +508,7 @@
         (define base-y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2)))))
         (define y (+ base-y (* i slice-h)))
         (define h (max 1 slice-h))
-        (set! out (cons (rect-at base-x y (max 1 total-w) h (svg-color tid) opacity title) out))))
+        (set! out (cons (rect-at base-x y (max 1 total-w) h (track-color tid) opacity title) out))))
     (string-join (reverse out) "\n"))
 
   (define (black-key? pitch)
@@ -563,11 +586,11 @@
                       (define x (x-of (second t)))
                       (define txt (third t))
                       (format "<text x='~a' y='~a' font-size='12' fill='~a'>~a</text>"
-                              x (+ y 8) (svg-color tid) txt)))
+                              x (+ y 8) (track-color tid) txt)))
                   (string-append
                    (format "<rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
 <text x='~a' y='~a' font-size='12' fill='#333'>~a</text>"
-                           legend-x y (svg-color tid)
+                           legend-x y (track-color tid)
                            (+ legend-x 12) (+ y 8) label)
                    "\n"
                    (string-join text-items "\n")))])
