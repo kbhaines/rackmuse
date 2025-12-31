@@ -19,6 +19,8 @@
  join
 
  oct+ oct-
+ oct++ oct--
+ oct+++ oct---
 
  c0 cs0 df0 d0 ds0 ef0 e0 f0 fs0 gf0 g0 gs0 af0 a0 as0 bf0 b0
  c1 cs1 df1 d1 ds1 ef1 e1 f1 fs1 gf1 g1 gs1 af1 a1 as1 bf1 b1
@@ -157,7 +159,11 @@
 
 (define join (compose flatten append))
 (define (oct+ n) (+ n 12))
+(define (oct++ n) (+ n 24))
+(define (oct+++ n) (+ n 36))
 (define (oct- n) (- n 12))
+(define (oct-- n) (- n 24))
+(define (oct--- n) (- n 36))
 
 (define (mk-track name spans) (cons name spans))
 (define track-name car)

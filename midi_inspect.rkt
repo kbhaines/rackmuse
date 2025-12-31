@@ -492,9 +492,10 @@
          (for/list ([p (overtone-pitches base)]
                     [i (in-naturals 0)]
                     #:when (and (< i overtone-count) (<= p 77)))
+           (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
            (define overtone-h
              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
-           (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h label)))
+           (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h overtone-label)))
         rects))
 
   (define (unified-rects tnotes max-p y0)
@@ -515,9 +516,10 @@
           (for ([p (overtone-pitches base)]
                 [i (in-naturals 0)]
                 #:when (and (< i overtone-count) (<= p 77)))
+            (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
             (define overtone-h
               (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
-            (set! descs (cons (list tid p s e (- 0.4 (* 0.05 i)) overtone-h label) descs))))))
+            (set! descs (cons (list tid p s e (- 0.4 (* 0.05 i)) overtone-h overtone-label) descs))))))
     (define groups (make-hash))
     (for ([d descs])
       (define key (list (second d) (third d) (fourth d)))
