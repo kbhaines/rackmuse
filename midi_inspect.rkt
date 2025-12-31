@@ -306,12 +306,36 @@
   (define brass-color "#c7c962")
   (define strings-color "#c99762")
   (define woodwind-color "#2b7a5a")
+  (define shade-step 0.08)
+  (define shade-map (make-hash))
   (define (svg-escape s)
     (define s1 (regexp-replace* #rx"&" s "&amp;"))
     (define s2 (regexp-replace* #rx"<" s1 "&lt;"))
     (regexp-replace* #rx">" s2 "&gt;"))
 
-  (define (track-color tid)
+  (define (hex->rgb s)
+    (list (string->number (substring s 1 3) 16)
+          (string->number (substring s 3 5) 16)
+          (string->number (substring s 5 7) 16)))
+
+  (define (byte->hex n)
+    (define s (number->string n 16))
+    (if (< (string-length s) 2) (string-append "0" s) s))
+
+  (define (rgb->hex r g b)
+    (define r8 (max 0 (min 255 (inexact->exact (round r)))))
+    (define g8 (max 0 (min 255 (inexact->exact (round g)))))
+    (define b8 (max 0 (min 255 (inexact->exact (round b)))))
+    (string-append "#" (byte->hex r8) (byte->hex g8) (byte->hex b8)))
+
+  (define (shade-color hex factor)
+    (define rgb (hex->rgb hex))
+    (define r (* (first rgb) factor))
+    (define g (* (second rgb) factor))
+    (define b (* (third rgb) factor))
+    (rgb->hex r g b))
+
+  (define (track-base-color tid)
     (define name (string-downcase (hash-ref track-names tid "")))
     (cond
       [(or (string-contains? name "trombone")
@@ -330,6 +354,10 @@
            (string-contains? name "bassoon"))
        woodwind-color]
       [else (svg-color tid)]))
+
+  (define (track-color tid)
+    (define factor (hash-ref shade-map tid 1.0))
+    (shade-color (track-base-color tid) factor))
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define bars (bar-boundaries max-tick division time-sigs))
   (define-values (window-start window-end)
@@ -381,6 +409,9 @@
      (set! track-views (reverse track-views))
      (set! height (if (null? track-views) (+ pad-y pad-y) (- y track-gap)))])
   (set! base-height height)
+  (define track-order (if unified? legend-ids (map first track-views)))
+  (for ([tid track-order] [i (in-naturals 0)])
+    (hash-set! shade-map tid (max 0.4 (- 1.0 (* shade-step i)))))
 
   (define (bar-bands)
     (define bands '())
