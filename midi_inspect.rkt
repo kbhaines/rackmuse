@@ -514,14 +514,14 @@
     (define row-y (+ y0 (* (- max-p pitch) note-h)))
     (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2)))))
 
-  (define (rect-at x y w h color opacity title)
+  (define (rect-at x y w h color opacity title class-name)
     (if title
-        (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'><title>~a</title></rect>"
-                x y w h color opacity (svg-escape title))
-        (format "<rect x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'/>"
-                x y w h color opacity)))
+        (format "<rect class='~a' x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'><title>~a</title></rect>"
+                class-name x y w h color opacity (svg-escape title))
+        (format "<rect class='~a' x='~a' y='~a' width='~a' height='~a' fill='~a' fill-opacity='~a' stroke='#222' stroke-width='1.0'/>"
+                class-name x y w h color opacity)))
 
-  (define (note-rect n max-p y0 pitch opacity rect-h title)
+  (define (note-rect n max-p y0 pitch opacity rect-h title class-name)
     (define ns (note-start n))
     (define ne (note-end n))
     (define s (max ns window-start))
@@ -531,7 +531,7 @@
         (let* ([x (x-of s)]
                [w (rect (* (- e s) px-per-tick))]
                [y (rect-y max-p y0 pitch rect-h)])
-          (rect-at x y w rect-h (track-color (note-track n)) opacity title))))
+          (rect-at x y w rect-h (track-color (note-track n)) opacity title class-name))))
 
   (define (overtone-pitches base)
     (define offsets '(12 19 24 28 31 34))
@@ -544,7 +544,8 @@
     (define tid (note-track n))
     (define tname (hash-ref track-names tid #f))
     (define label (if tname tname (format "Track ~a" tid)))
-    (define rects (list (note-rect n max-p y0 base 0.85 base-h label)))
+    (define class-name (format "note track-~a" tid))
+    (define rects (list (note-rect n max-p y0 base 0.85 base-h label class-name)))
     (if (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
         (append
          rects
@@ -554,7 +555,7 @@
            (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
            (define overtone-h
              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
-           (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h overtone-label)))
+           (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h overtone-label class-name)))
         rects))
 
   (define (unified-rects tnotes max-p y0)
@@ -570,7 +571,8 @@
         (define base-h (- note-h 1))
         (define tname (hash-ref track-names tid #f))
         (define label (if tname tname (format "Track ~a" tid)))
-        (set! descs (cons (list tid base s e 0.85 base-h label) descs))
+        (define class-name (format "note track-~a" tid))
+        (set! descs (cons (list tid base s e 0.85 base-h label class-name) descs))
         (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
           (for ([p (overtone-pitches base)]
                 [i (in-naturals 0)]
@@ -578,7 +580,7 @@
             (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
             (define overtone-h
               (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
-            (set! descs (cons (list tid p s e (- 0.4 (* 0.05 i)) overtone-h overtone-label) descs))))))
+            (set! descs (cons (list tid p s e (- 0.4 (* 0.05 i)) overtone-h overtone-label class-name) descs))))))
     (define groups (make-hash))
     (for ([d descs])
       (define key (list (second d) (third d) (fourth d)))
@@ -601,11 +603,12 @@
         (define opacity (list-ref d 4))
         (define rect-h (list-ref d 5))
         (define title (list-ref d 6))
+        (define class-name (list-ref d 7))
         (define slice-h (/ (exact->inexact (max 1 rect-h)) (max 1 count)))
         (define base-y (+ row-y (inexact->exact (floor (/ (- note-h rect-h) 2)))))
         (define y (+ base-y (* i slice-h)))
         (define h (max 1 slice-h))
-        (set! out (cons (rect-at base-x y (max 1 total-w) h (track-color tid) opacity title) out))))
+        (set! out (cons (rect-at base-x y (max 1 total-w) h (track-color tid) opacity title class-name) out))))
     (string-join (reverse out) "\n"))
 
   (define (black-key? pitch)
@@ -687,26 +690,50 @@
                       (format "<text x='~a' y='~a' font-size='12' fill='~a'>~a</text>"
                               x (+ y 8) (track-color tid) txt)))
                   (string-append
-                   (format "<rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
+                   (format "<g class='legend track-~a' data-track='~a'><rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
 <text x='~a' y='~a' font-size='12' fill='#333'>~a</text>"
-                           legend-x y (track-color tid)
+                           tid tid legend-x y (track-color tid)
                            (+ legend-x 12) (+ y 8) label)
                    "\n"
-                   (string-join text-items "\n")))])
+                   (string-join text-items "\n")
+                   "</g>"))])
           (string-join items "\n"))))
+
+  (define (legend-style)
+    (if (or (null? legend-ids) (not unified?))
+        ""
+        (string-append
+         "#midi-roll .notes .note{opacity:1;}\n"
+         "#midi-roll[data-active] .notes .note{opacity:0.4;}\n"
+         (string-join
+          (for/list ([tid legend-ids])
+            (format "#midi-roll[data-active='~a'] .notes .track-~a{opacity:1;}" tid tid))
+          "\n"))))
 
   (set! height (+ base-height legend-h))
   (define svg
     (string-append
      "<?xml version='1.0' encoding='UTF-8'?>\n"
-     (format "<svg xmlns='http://www.w3.org/2000/svg' width='~a' height='~a' viewBox='0 0 ~a ~a'>\n"
+     (format "<svg id='midi-roll' xmlns='http://www.w3.org/2000/svg' width='~a' height='~a' viewBox='0 0 ~a ~a'>\n"
              width height width height)
      (format "<rect x='0' y='0' width='~a' height='~a' fill='#fafafa'/>\n" width height)
+     (format "<style>.legend{cursor:pointer;pointer-events:all;} ~a</style>\n" (legend-style))
      (bar-bands) "\n"
      (grid-lines) "\n"
      (bar-labels) "\n"
      (legend-block) "\n"
+     "<g class='notes'>\n"
      (string-join (map track-block track-views) "\n")
+     "\n</g>\n"
+     "<script><![CDATA[\n"
+     "const root=document.getElementById('midi-roll');\n"
+     "const legends=root.querySelectorAll('.legend');\n"
+     "for(const el of legends){\n"
+     "  const tid=el.getAttribute('data-track');\n"
+     "  el.addEventListener('mouseenter',()=>root.setAttribute('data-active',tid));\n"
+     "  el.addEventListener('mouseleave',()=>root.removeAttribute('data-active'));\n"
+     "}\n"
+     "]]></script>\n"
      "\n</svg>\n"))
   (call-with-output-file path
     (λ (out) (display svg out))

@@ -50,6 +50,7 @@
 (define qr (- 0 q))
 (define dq (* 3 (/ q 2)))
 (define dqr (- 0 dq))
+
 (define e (/ q 2))
 (define er (- 0 e))
 
