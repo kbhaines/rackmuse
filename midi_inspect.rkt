@@ -308,6 +308,7 @@
   (define woodwind-color "#2b7a5a")
   (define shade-step 0.08)
   (define shade-map (make-hash))
+  (define order-map (make-hash))
   (define (svg-escape s)
     (define s1 (regexp-replace* #rx"&" s "&amp;"))
     (define s2 (regexp-replace* #rx"<" s1 "&lt;"))
@@ -411,7 +412,8 @@
   (set! base-height height)
   (define track-order (if unified? legend-ids (map first track-views)))
   (for ([tid track-order] [i (in-naturals 0)])
-    (hash-set! shade-map tid (max 0.4 (- 1.0 (* shade-step i)))))
+    (hash-set! shade-map tid (max 0.4 (- 1.0 (* shade-step i))))
+    (hash-set! order-map tid i))
 
   (define (bar-bands)
     (define bands '())
@@ -522,7 +524,10 @@
       (hash-set! groups key (cons d (hash-ref groups key '()))))
     (define out '())
     (for ([key (in-list (hash-keys groups))])
-      (define group (reverse (hash-ref groups key)))
+      (define group
+        (sort (hash-ref groups key)
+              <
+              #:key (λ (d) (hash-ref order-map (first d) 0))))
       (define pitch (first key))
       (define s (second key))
       (define e (third key))
