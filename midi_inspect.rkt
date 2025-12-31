@@ -324,7 +324,7 @@
 
 (define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events overtone-count)
   (define note-h 16)
-  (define pad-x 60)
+  (define pad-x 140)
   (define pad-y 20)
   (define track-gap 14)
   (define track-title-h 12)
@@ -393,6 +393,9 @@
   (define (track-color tid)
     (define factor (hash-ref shade-map tid 1.0))
     (shade-color (track-base-color tid) factor))
+
+  (define pre-legend-ids
+    (if unified? (sort (remove-duplicates (map note-track notes)) <) '()))
   (define max-tick (if (null? notes) 0 (apply max (map note-end notes))))
   (define bars (bar-boundaries max-tick division time-sigs))
   (define-values (window-start window-end)
@@ -429,7 +432,7 @@
      (define notes-y (+ text-y text-lane-h))
      (set! track-views (list (list 'all notes min-p max-p notes-y lane-h text-y)))
      (set! height (+ pad-y lane-h))
-     (set! legend-ids (sort (remove-duplicates (map note-track notes)) <))
+      (set! legend-ids pre-legend-ids)
      (set! legend-h (if (null? legend-ids) 0 (+ 10 (* (length legend-ids) 12))))]
     [else
      (define by-track (make-hash))
@@ -637,8 +640,8 @@
     (define labels '())
     (for ([p (in-range max-p (sub1 min-p) -1)])
       (define y (+ y0 (* (- max-p p) note-h) (- note-h 2)))
-      (set! labels (cons (format "<text x='6' y='~a' font-size='12' fill='#555'>~a</text>"
-                                 y (note-name p))
+      (set! labels (cons (format "<text x='~a' y='~a' font-size='12' fill='#555' text-anchor='end'>~a</text>"
+                                 (- pad-x 6) y (note-name p))
                          labels)))
     (string-join (reverse labels) "\n"))
 
@@ -673,7 +676,8 @@
   (define (legend-block)
     (if (or (null? legend-ids) (not unified?))
         ""
-        (let* ([legend-x pad-x]
+        (let* ([legend-text-x 22]
+               [legend-swatch-x 8]
                [legend-y (+ base-height 8)]
                [items
                 (for/list ([tid legend-ids] [i (in-naturals 0)])
@@ -692,8 +696,8 @@
                   (string-append
                    (format "<g class='legend track-~a' data-track='~a'><rect x='~a' y='~a' width='8' height='8' fill='~a'/>\
 <text x='~a' y='~a' font-size='12' fill='#333'>~a</text>"
-                           tid tid legend-x y (track-color tid)
-                           (+ legend-x 12) (+ y 8) label)
+                           tid tid legend-swatch-x y (track-color tid)
+                           legend-text-x (+ y 8) label)
                    "\n"
                    (string-join text-items "\n")
                    "</g>"))])

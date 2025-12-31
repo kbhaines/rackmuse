@@ -53,6 +53,7 @@
 
 (define melody-b
   (list
+    (cons 0 "Melody B")
    (cons dq bf4) (cons er 0) (cons e bf4) (cons e c5)
    (cons h bf4) (cons er 0) (cons e g4)
    (cons dq ef5) (cons dq d5)
@@ -64,8 +65,10 @@
 (define chords-b
   (list
    (list bars4 (list g2 bf2 d3)) ;; Gm
+   ;; (list dbar (list g2 ef2 bf2)) ;; Eb/G
    (list dbar (list g2 bf2 ef3)) ;; Eb/G
    (list dbar (list f2 bf2 d3)) ;; Bb/F
+
    (list bars4 (list g2 bf2 d3)) ;; Gm
    (list dbar (list g2 bf2 ef3)) ;; Eb/G
    (list dbar (list f2 a2 c3)) ;; F
@@ -98,6 +101,8 @@
    (list (+ dq q) er)
    (list e e e e e e)))
 
+(define (horn-melody-b p) (if (eq? p f4) f4 (oct- p)))
+
 (make-midi-track-file
  '(6 8)
  '(-2 0)
@@ -106,8 +111,8 @@
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
   (mk-track "Trumpet 1" (project-notes melody-b))
-  (mk-track "Horn 1" (project-notes melody-b oct-))
-  (mk-track "Horn 2" (project-notes melody-b oct-))
+  (mk-track "Horn 1" (project-notes melody-b horn-melody-b))
+  (mk-track "Horn 2" (project-notes melody-b horn-melody-b))
   (mk-track "Trombone 1" (project-chords trombones-b chords-b second oct+))
   (mk-track "Trombone 2" (project-chords trombones-b chords-b third))
   (mk-track "Trombone 3" (project-chords trombones-b chords-b first))
