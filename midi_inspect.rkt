@@ -306,7 +306,7 @@
   (define brass-color "#c7c962")
   (define strings-color "#c99762")
   (define woodwind-color "#2b7a5a")
-  (define shade-step 0.08)
+  (define shade-step 0.04)
   (define shade-map (make-hash))
   (define order-map (make-hash))
   (define (svg-escape s)
@@ -431,6 +431,19 @@
                             x pad-y w (- height pad-y))
                     bands))))
     (string-join (reverse bands) "\n"))
+
+  (define (bar-labels)
+    (define labels '())
+    (define bar-count (length bars))
+    (for ([i (in-range bar-count)])
+      (define start (list-ref bars i))
+      (when (and (< start window-end) (>= start window-start))
+        (define x (+ (x-of start) 2))
+        (set! labels
+              (cons (format "<text x='~a' y='~a' font-size='10' fill='#666'>~a</text>"
+                            x (- pad-y 4) (add1 i))
+                    labels))))
+    (string-join (reverse labels) "\n"))
 
   (define (grid-lines)
     (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
@@ -599,12 +612,14 @@
     (define tname (and (not (eq? ti 'all)) (hash-ref track-names ti #f)))
     (define title-text
       (cond
-        [(eq? ti 'all) "All tracks"]
+        [(eq? ti 'all) ""]
         [tname (format "Track ~a: ~a" ti tname)]
         [else (format "Track ~a" ti)]))
     (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>~a</text>"
                           pad-x (- y0 3) title-text))
-    (string-append title "\n" rows "\n" labels "\n" rects))
+    (if (string=? title-text "")
+        (string-append rows "\n" labels "\n" rects)
+        (string-append title "\n" rows "\n" labels "\n" rects)))
 
   (define (legend-block)
     (if (or (null? legend-ids) (not unified?))
@@ -643,6 +658,7 @@
      (format "<rect x='0' y='0' width='~a' height='~a' fill='#fafafa'/>\n" width height)
      (bar-bands) "\n"
      (grid-lines) "\n"
+     (bar-labels) "\n"
      (legend-block) "\n"
      (string-join (map track-block track-views) "\n")
      "\n</svg>\n"))
