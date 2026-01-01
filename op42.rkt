@@ -112,17 +112,17 @@
  (list
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
-  (mk-track "Trumpet 1" (project-notes melody-b))
+  (mk-track "Trumpet 1:melody" (project-notes melody-b))
 
-  (mk-track "Horn 1" (project-notes melody-b horn-melody-b))
-  (mk-track "Horn 2" (project-notes melody-b horn-melody-b))
+  (mk-track "Horn 1:melody" (project-notes melody-b horn-melody-b))
+  (mk-track "Horn 2:melody" (project-notes melody-b horn-melody-b))
 
-  (mk-track "Trombone 1" (project-chords trombones-b chords-b second va8))
-  (mk-track "Trombone 2" (project-chords trombones-b chords-b third))
-  (mk-track "Trombone 3" (project-chords trombones-b chords-b first))
+  (mk-track "Trombone 1:engine" (project-chords trombones-b chords-b second va8))
+  (mk-track "Trombone 2:engine" (project-chords trombones-b chords-b third))
+  (mk-track "Trombone 3:engine" (project-chords trombones-b chords-b first))
 
-  (mk-track "Violins 2" (project-chords violins-b chords-b third va8))
-  (mk-track "Violas" (project-chords viola-b chords-b second va8))
-  (mk-track "Cellos" (project-chords cello-b chords-b first))
-  (mk-track "Double Bass" (project-chords dbass-b chords-b first vb8))))
+  (mk-track "Violins 2:engine" (project-chords violins-b chords-b third va8))
+  (mk-track "Violas:engine" (project-chords viola-b chords-b second va8))
+  (mk-track "Cellos:bass" (project-chords cello-b chords-b first))
+  (mk-track "Double Bass:bass" (project-chords dbass-b chords-b first vb8))))
 

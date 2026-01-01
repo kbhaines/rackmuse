@@ -201,13 +201,25 @@
         (set! texts (cons (list ti (evt-tick e) (evt-a e)) texts)))))
   (sort texts < #:key second))
 
-(define (track-names-from-tracks tracks)
+(define (track-info-from-tracks tracks keep-suffix?)
   (define names (make-hash))
+  (define funcs (make-hash))
+  (define (parse-name n)
+    (define parts (string-split n ":" #:trim? #t))
+    (define base (if (pair? parts) (car parts) n))
+    (define suffix (if (> (length parts) 1) (string-downcase (last parts)) ""))
+    (define func
+      (cond
+        [(member suffix '("melody" "engine" "support" "bass")) (string->symbol suffix)]
+        [else #f]))
+    (values (if keep-suffix? n base) func))
   (for ([evts tracks] [ti (in-naturals 0)])
     (for ([e evts])
       (when (eq? (evt-kind e) 'track-name)
-        (hash-set! names ti (evt-a e)))))
-  names)
+        (define-values (dname func) (parse-name (evt-a e)))
+        (hash-set! names ti dname)
+        (when func (hash-set! funcs ti func)))))
+  (values names funcs))
 
 (define (bar-boundaries max-tick division time-sigs)
   (define sigs (if (null? time-sigs) (list (list 0 4 4)) time-sigs))
@@ -322,7 +334,7 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names svg-width svg-bars svg-bar-range text-events overtone-count)
+(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count)
   (define note-h 16)
   (define pad-x 140)
   (define pad-y 20)
@@ -332,6 +344,10 @@
   (define brass-color "#c7c962")
   (define strings-color "#c99762")
   (define woodwind-color "#2b7a5a")
+  (define melody-color "#d06b6b")
+  (define engine-color "#5a8ad0")
+  (define support-color "#6bb68a")
+  (define bass-color "#6b5aa6")
   (define shade-step 0.04)
   (define shade-floor 0.8)
   (define shade-map (make-hash))
@@ -365,7 +381,12 @@
 
   (define (track-group tid)
     (define name (string-downcase (hash-ref track-names tid "")))
+    (define func (and use-function-colors? (hash-ref track-functions tid #f)))
     (cond
+      [(eq? func 'melody) 'melody]
+      [(eq? func 'engine) 'engine]
+      [(eq? func 'support) 'support]
+      [(eq? func 'bass) 'bass]
       [(or (string-contains? name "trombone")
            (string-contains? name "trumpet")
            (string-contains? name "horn")
@@ -385,6 +406,10 @@
 
   (define (track-base-color tid)
     (case (track-group tid)
+      [(melody) melody-color]
+      [(engine) engine-color]
+      [(support) support-color]
+      [(bass) bass-color]
       [(brass) brass-color]
       [(strings) strings-color]
       [(woodwind) woodwind-color]
@@ -744,7 +769,7 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--track-only LIST] [--track-except LIST] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
@@ -754,6 +779,7 @@
   (displayln "  --svg-overtones N Show N overtones (1-6, up to F5, if base <= C5)")
   (displayln "  --track-only LIST   Include only track numbers (e.g., 0,2,4 or 1-3)")
   (displayln "  --track-except LIST Exclude track numbers (e.g., 1,3 or 2-5)")
+  (displayln "  --track-function    Enable function coloring and keep :suffix in names")
   (displayln "  --ascii         Print a piano-roll as ASCII")
   (displayln "  --ascii-cols N  Limit ASCII columns (auto-scales time)"))
 
@@ -782,6 +808,7 @@
   (define track-except-idx (index-of args "--track-except"))
   (define track-except
     (and track-except-idx (parse-track-list (list-ref args (add1 track-except-idx)))))
+  (define track-function? (member "--track-function" args))
   (define ascii? (member "--ascii" args))
   (define ascii-cols-idx (index-of args "--ascii-cols"))
   (define ascii-cols
@@ -805,10 +832,11 @@
     (print-track i t notes-only?))
   (define notes (notes-from-tracks filtered-tracks))
   (define time-sigs (time-signatures-from-tracks filtered-tracks))
-  (define track-names (track-names-from-tracks filtered-tracks))
+  (define-values (track-names track-functions)
+    (track-info-from-tracks filtered-tracks track-function?))
   (define text-events (text-events-from-tracks filtered-tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names svg-width svg-bars svg-bar-range text-events svg-overtones)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
