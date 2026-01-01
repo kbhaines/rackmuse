@@ -1,6 +1,8 @@
 #lang racket
 
-(require "rackmuse.rkt")
+(require
+  "rackmuse.rkt"
+  "mid.rkt")
 
 (define r1a (list q e er e e))
 (define r1b (list e e e e e e))
@@ -35,11 +37,8 @@
         (cons dh c4) (cons barr 0)
         ))
 
-(require "mid.rkt")
 (displayln (project-notes melody))
 
-;; (pretty-display (project-notes melody))
-;; (pretty-display (project-chords dbass chords first))
 (make-midi-track-file '(6 8)
                       '(-2 0)
                       "intro.mid"
@@ -47,13 +46,13 @@
                        (mk-track "horns" (project-notes melody))
                        (mk-track "viola" (project-chords viola chords third))
                        (mk-track "cello" (project-chords cello chords first))
-                       (mk-track "dbass" (project-chords dbass chords first oct-))))
+                       (mk-track "dbass" (project-chords dbass chords first vb8))))
 
 (define bars4 (* 2 dbar))
 
 (define melody-b
   (list
-    (cons 0 "Melody B")
+   (cons 0 "Melody B")
    (cons dq bf4) (cons er 0) (cons e bf4) (cons e c5)
    (cons h bf4) (cons er 0) (cons e g4)
    (cons dq ef5) (cons dq d5)
@@ -101,7 +100,7 @@
    (list (+ dq q) er)
    (list e e e e e e)))
 
-(define (horn-melody-b p) (if (eq? p f4) f4 (oct- p)))
+(define (horn-melody-b p) (if (eq? p f4) f3 (vb8 p)))
 
 (make-midi-track-file
  '(6 8)
@@ -111,13 +110,16 @@
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
   (mk-track "Trumpet 1" (project-notes melody-b))
+
   (mk-track "Horn 1" (project-notes melody-b horn-melody-b))
   (mk-track "Horn 2" (project-notes melody-b horn-melody-b))
-  (mk-track "Trombone 1" (project-chords trombones-b chords-b second oct+))
+
+  (mk-track "Trombone 1" (project-chords trombones-b chords-b second va8))
   (mk-track "Trombone 2" (project-chords trombones-b chords-b third))
   (mk-track "Trombone 3" (project-chords trombones-b chords-b first))
-  (mk-track "Violins 2" (project-chords violins-b chords-b third oct+))
-  (mk-track "Violas" (project-chords viola-b chords-b second oct+))
+
+  (mk-track "Violins 2" (project-chords violins-b chords-b third va8))
+  (mk-track "Violas" (project-chords viola-b chords-b second va8))
   (mk-track "Cellos" (project-chords cello-b chords-b first))
-  (mk-track "Double Bass" (project-chords dbass-b chords-b first oct-))))
+  (mk-track "Double Bass" (project-chords dbass-b chords-b first vb8))))
 

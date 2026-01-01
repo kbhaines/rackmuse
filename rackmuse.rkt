@@ -4,10 +4,9 @@
  w wr dw dwr
  h hr dh dhr
  q qr dq dqr
- e er
- ;; bar barr dbar dbarr
+ e er de der
 
- repeat
+ repeat rest dot
 
  mk-chord chord-notes chord-duration
  mk-note note-note note-duration
@@ -19,9 +18,7 @@
 
  join
 
- oct+ oct-
- oct++ oct--
- oct+++ oct---
+ va8 va16 va24 vb8 vb16 vb24
 
  c0 cs0 df0 d0 ds0 ef0 e0 f0 fs0 gf0 g0 gs0 af0 a0 as0 bf0 b0
  c1 cs1 df1 d1 ds1 ef1 e1 f1 fs1 gf1 g1 gs1 af1 a1 as1 bf1 b1
@@ -36,32 +33,28 @@
 
 (define PPQ 480)
 
+(define (rest d) (- 0 d))
+(define (dot d) (* 3 (/ d 2)))
+
 (define w (* 4 PPQ))
-(define wr (- 0 w))
-(define dw (* 3 (/ w 2)))
-(define dwr (- 0 dw))
+(define wr (rest w))
+(define dw (dot w))
+(define dwr (rest dw))
 
 (define h (* 2 PPQ))
-(define hr (- 0 h))
-(define dh (* 3 (/ h 2)))
-(define dhr (- 0 dh))
+(define hr (rest h))
+(define dh (dot h))
+(define dhr (rest dh))
 
 (define q PPQ)
-(define qr (- 0 q))
-(define dq (* 3 (/ q 2)))
-(define dqr (- 0 dq))
+(define qr (rest q))
+(define dq (dot q))
+(define dqr (rest dq))
 
 (define e (/ q 2))
-(define er (- 0 e))
-
-;; (define bar (* 3 q))
-;; (define barr (- 0 bar))
-;; (define dbar (* 2 bar))
-;; (define dbarr (- 0 dbar))
-;;
-;; (define tacet1 (list dbar))
-;; (define tacet2 (list dbarr))
-;; (define tacet4 (list dbarr dbarr))
+(define er (rest e))
+(define de (dot e))
+(define der (rest de))
 
 (define (repeat n . ls) (flatten (make-list n (list ls))))
 
@@ -165,12 +158,13 @@
           (if (number? data) (transpose data) data))))
 
 (define join (compose flatten append))
-(define (oct+ n) (+ n 12))
-(define (oct++ n) (+ n 24))
-(define (oct+++ n) (+ n 36))
-(define (oct- n) (- n 12))
-(define (oct-- n) (- n 24))
-(define (oct--- n) (- n 36))
+
+(define (va8 n) (+ n 12))
+(define (va16 n) (+ n 24))
+(define (va24 n) (+ n 36))
+(define (vb8 n) (- n 12))
+(define (vb16 n) (- n 24))
+(define (vb24 n) (- n 36))
 
 (define (mk-track name spans) (cons name spans))
 (define track-name car)
