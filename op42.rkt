@@ -73,7 +73,7 @@
    (list dbar (list f2 a2 c3)) ;; F
    ))
 
-(define violins-b
+(define pattern-b
   (list
    e er e er e e
    e er e er e e
@@ -84,8 +84,9 @@
    q e er e e
    q e er e e))
 
-(define viola-b violins-b)
-(define cello-b violins-b)
+(define violins-b pattern-b)
+(define viola-b pattern-b)
+(define cello-b pattern-b)
 
 (define dbass-b
   (repeat 4
