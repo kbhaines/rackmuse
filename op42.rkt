@@ -63,8 +63,10 @@
 
 (define chords-b
   (list
-   (list bars4 (list g2 bf2 d3)) ;; Gm
-   ;; (list dbar (list g2 ef2 bf2)) ;; Eb/G
+   (list dbar (list g2 bf2 d3)) ;; Gm
+   (list dq (list g2 bf2 ef3)) ;; Eb/G
+   (list dq (list g2 bf2 d3)) ;; Gm
+   (list bar (list g2 c2 d3)) ;; Gs4
    (list dbar (list g2 bf2 ef3)) ;; Eb/G
    (list dbar (list f2 bf2 d3)) ;; Bb/F
 
