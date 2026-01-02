@@ -81,7 +81,7 @@
 ;; The convention is that duration is always first, and the rest of the entity data is the tail or cdr
 ;; of the list
 
-(define (mk-chord notes duration) (cons duration notes))
+(define (mk-chord duration . notes) (list duration notes))
 (define chord-duration car)
 (define chord-notes cadr)
 

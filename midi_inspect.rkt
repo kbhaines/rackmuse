@@ -611,13 +611,15 @@
             (define scale (+ 0.7 (* 0.6 intensity)))
             (define rx (* (/ division 2.0) px-per-tick scale))
             (define ry (* note-h 1.5 scale))
-            (define mid (/ (+ ns ne) 2.0))
-            (define midc (min (max mid window-start) window-end))
-            (define cx (x-of midc))
+            (define startc (max ns window-start))
+            (define x0 (x-of startc))
             (define cy (+ y0 (* (- max-p pitch) note-h) (/ note-h 2.0)))
+            (define x1 (+ x0 (* rx 0.3)))
+            (define x2 (+ x0 (* rx 2.0)))
             (set! items
-                  (cons (format "<ellipse cx='~a' cy='~a' rx='~a' ry='~a' fill='~a' fill-opacity='~a' filter='url(#bloom-blur)'/>"
-                                cx cy rx ry color opacity)
+                  (cons (format "<path d='M ~a ~a Q ~a ~a ~a ~a Q ~a ~a ~a ~a Z' fill='~a' fill-opacity='~a' filter='url(#bloom-blur)'/>"
+                                x0 cy x1 (- cy ry) x2 cy x1 (+ cy ry) x0 cy
+                                color opacity)
                         items)))
           (for ([n tnotes])
             (define ns (note-start n))

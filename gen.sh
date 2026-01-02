@@ -5,6 +5,8 @@
 rktfile=$1
 midifile=$2
 outfile=$midifile.svg
+set -e
 racket -l errortrace -t $rktfile
-racket midi_inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg-overtones 1 --svg-overtones-bloom-all --svg $outfile
+# racket midi_inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg-overtones 3 --svg-overtones-bloom-all --svg $outfile
+racket midi_inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg $outfile
 open -a safari $outfile
