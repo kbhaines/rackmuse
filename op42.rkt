@@ -110,10 +110,11 @@
  '(-2 0)
  "b-section.mid"
  (list
+
   ;; (mk-track "Oboe1" (project-chords trombones-b b-chords third oct+++))
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
-  (mk-track "Trumpet 1:melody" (project-notes melody-b))
 
+  (mk-track "Trumpet 1:melody" (project-notes melody-b))
   (mk-track "Horn 1:melody" (project-notes melody-b horn-melody-b))
   (mk-track "Horn 2:melody" (project-notes melody-b horn-melody-b))
 

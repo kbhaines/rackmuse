@@ -334,7 +334,7 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count)
+(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count overtone-bloom?)
   (define note-h 16)
   (define pad-x 140)
   (define pad-y 20)
@@ -418,6 +418,22 @@
   (define (track-color tid)
     (define factor (hash-ref shade-map tid 1.0))
     (shade-color (track-base-color tid) factor))
+
+  (define (lerp a b t)
+    (+ a (* (- b a) t)))
+
+  (define (heat-color t)
+    (define t1 (max 0 (min 1 t)))
+    (cond
+      [(<= t1 0.33)
+       (define tt (/ t1 0.33))
+       (rgb->hex (lerp 0 0 tt) (lerp 120 200 tt) (lerp 255 120 tt))]
+      [(<= t1 0.66)
+       (define tt (/ (- t1 0.33) 0.33))
+       (rgb->hex (lerp 0 255 tt) (lerp 200 210 tt) (lerp 120 0 tt))]
+      [else
+       (define tt (/ (- t1 0.66) 0.34))
+       (rgb->hex (lerp 255 220 tt) (lerp 210 60 tt) (lerp 0 40 tt))]))
 
   (define pre-legend-ids
     (if unified? (sort (remove-duplicates (map note-track notes)) <) '()))
@@ -586,6 +602,35 @@
            (note-rect n max-p y0 p (- 0.4 (* 0.05 i)) overtone-h overtone-label class-name)))
         rects))
 
+  (define (bloom-elements tnotes max-p y0)
+    (if (and overtone-bloom? (number? overtone-count) (>= overtone-count 1))
+        (let ([items '()])
+          (for ([n tnotes])
+            (define ns (note-start n))
+            (define ne (note-end n))
+            (when (and (< ns window-end) (> ne window-start))
+              (define base (note-pitch n))
+              (when (<= base 72)
+                (for ([p (overtone-pitches base)]
+                      [i (in-naturals 0)]
+                      #:when (and (< i overtone-count) (<= p 77)))
+                  (define intensity (exp (* -0.6 i)))
+                  (define color (heat-color intensity))
+                  (define opacity (* 0.35 intensity))
+                  (define scale (+ 0.7 (* 0.6 intensity)))
+                  (define rx (* (/ division 2.0) px-per-tick scale))
+                  (define ry (* note-h 1.5 scale))
+                  (define mid (/ (+ ns ne) 2.0))
+                  (define midc (min (max mid window-start) window-end))
+                  (define cx (x-of midc))
+                  (define cy (+ y0 (* (- max-p p) note-h) (/ note-h 2.0)))
+                  (set! items
+                        (cons (format "<ellipse cx='~a' cy='~a' rx='~a' ry='~a' fill='~a' fill-opacity='~a' filter='url(#bloom-blur)'/>"
+                                      cx cy rx ry color opacity)
+                              items))))))
+          (string-join (reverse items) "\n"))
+        ""))
+
   (define (unified-rects tnotes max-p y0)
     (define descs '())
     (for ([n tnotes])
@@ -684,6 +729,7 @@
            (filter (λ (s) (not (string=? s "")))
                    (apply append (map (λ (n) (note-rects n max-p y0)) tnotes)))
            "\n")))
+    (define bloom (bloom-elements tnotes max-p y0))
     (define rows (pitch-row-bands min-p max-p y0))
     (define labels (pitch-labels min-p max-p y0))
     (define tname (and (not (eq? ti 'all)) (hash-ref track-names ti #f)))
@@ -695,8 +741,8 @@
     (define title (format "<text x='~a' y='~a' font-size='10' font-weight='bold' fill='#333'>~a</text>"
                           pad-x (- y0 3) title-text))
     (if (string=? title-text "")
-        (string-append rows "\n" labels "\n" rects)
-        (string-append title "\n" rows "\n" labels "\n" rects)))
+        (string-append rows "\n" bloom "\n" labels "\n" rects)
+        (string-append title "\n" rows "\n" bloom "\n" labels "\n" rects)))
 
   (define (legend-block)
     (if (or (null? legend-ids) (not unified?))
@@ -740,12 +786,17 @@
           "\n"))))
 
   (set! height (+ base-height legend-h))
+  (define bloom-defs
+    (if overtone-bloom?
+        "<defs><filter id='bloom-blur'><feGaussianBlur stdDeviation='6'/></filter></defs>\n"
+        ""))
   (define svg
     (string-append
      "<?xml version='1.0' encoding='UTF-8'?>\n"
      (format "<svg id='midi-roll' xmlns='http://www.w3.org/2000/svg' width='~a' height='~a' viewBox='0 0 ~a ~a'>\n"
              width height width height)
      (format "<rect x='0' y='0' width='~a' height='~a' fill='#fafafa'/>\n" width height)
+     bloom-defs
      (format "<style>.legend{cursor:pointer;pointer-events:all;} ~a</style>\n" (legend-style))
      (bar-bands) "\n"
      (grid-lines) "\n"
@@ -769,7 +820,7 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--svg-overtones-bloom] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
@@ -777,6 +828,7 @@
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
   (displayln "  --svg-overtones N Show N overtones (1-6, up to F5, if base <= C5)")
+  (displayln "  --svg-overtones-bloom Render overtones as blurred heat-map bloom")
   (displayln "  --track-only LIST   Include only track numbers (e.g., 0,2,4 or 1-3)")
   (displayln "  --track-except LIST Exclude track numbers (e.g., 1,3 or 2-5)")
   (displayln "  --track-function    Enable function coloring and keep :suffix in names")
@@ -793,6 +845,7 @@
   (define svg-overtones
     (let ([v (and svg-overtones-idx (string->number (list-ref args (add1 svg-overtones-idx))))])
       (and v (min 6 (max 1 v)))))
+  (define svg-overtones-bloom? (member "--svg-overtones-bloom" args))
   (define svg-width-idx (index-of args "--svg-width"))
   (define svg-width
     (and svg-width-idx (string->number (list-ref args (add1 svg-width-idx)))))
@@ -836,7 +889,7 @@
     (track-info-from-tracks filtered-tracks track-function?))
   (define text-events (text-events-from-tracks filtered-tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones svg-overtones-bloom?)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
