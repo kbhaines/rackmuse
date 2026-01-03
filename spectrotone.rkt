@@ -44,32 +44,84 @@
 ;; ranges: list of (start end color1 color2) with inclusive MIDI note bounds.
 (define spectrotone-maps
   (list
+
    (list "oboe"
          (list
           (list 58 67 'red 'orange)
           (list 68 79 'orange 'yellow)
           (list 80 91 'yellow 'yellow)))
+   (list "flute"
+         (list
+          (list 59 71 'blue 'green)
+          (list 72 79 'green 'yellow)
+          (list 80 98 'yellow 'yellow)))
+   (list "clarinet"
+         (list
+          (list 50 67 'blue 'green)
+          (list 68 77 'green 'yellow)
+          (list 78 82 'yellow 'white)
+          (list 83 92 'white 'white)))
+   (list "bassoon"
+         (list
+          (list 34 72 'green 'green)))
+   (list "contra-bassoon"
+         (list
+          (list 22 54 'brown 'brown)))
+   (list "horn"
+         (list
+          (list 35 41 'gray 'purple)
+          (list 41 55 'purple 'brown)
+          (list 55 68 'brown 'red)
+          (list 68 79 'red 'red)
+          (list 70 81 'white 'white)))
+   (list "trumpet"
+         (list
+          (list 52 58 'gray 'brown)
+          (list 59 64 'brown 'red)
+          (list 65 70 'red 'orange)
+          (list 71 78 'orange 'yellow)
+          (list 79 86 'yellow 'white)))
+   (list "trombone"
+         (list
+          (list 40 48 'gray 'brown)
+          (list 49 53 'brown 'red)
+          (list 54 64 'red 'orange)
+          (list 65 77 'orange 'orange)))
+
+   (list "harp"
+         (list
+          (list 23 41 'purple 'brown)
+          (list 42 60 'brown 'orange)
+          (list 61 84 'orange 'green)
+          (list 85 95 'green 'yellow)
+          (list 96 103 'yellow 'yellow)))
+
    (list "violin"
          (list
-          (list 55 62 'purple 'purple)
-          (list 62 69 'blue 'blue)
-          (list 69 76 'green 'green)
-          (list 76 89 'yellow 'yellow)
+          (list 55 62 'purple 'blue)
+          (list 62 69 'blue 'green)
+          (list 69 76 'green 'yellow)
+          (list 76 89 'yellow 'white)
           (list 89 100 'white 'white)))
    (list "viola"
          (list
-          (list 48 55 'purple 'purple)
-          (list 55 62 'blue 'blue)
-          (list 62 69 'green 'green)
-          (list 69 81 'yellow 'yellow)
+          (list 48 55 'purple 'blue)
+          (list 55 62 'blue 'green)
+          (list 62 69 'green 'yellow)
+          (list 69 81 'yellow 'white)
           (list 81 93 'white 'white)))
    (list "cello"
          (list
-          (list 36 43 'purple 'purple)
-          (list 43 50 'blue 'blue)
-          (list 50 57 'green 'green)
-          (list 57 69 'yellow 'yellow)
-          (list 70 81 'white 'white)))))
+          (list 36 43 'purple 'blue)
+          (list 43 50 'blue 'green)
+          (list 50 57 'green 'yellow)
+          (list 57 69 'yellow 'white)
+          (list 70 81 'white 'white)))
+   (list "double bass"
+         (list 24 38 'purple 'blue)
+         (list 39 43 'blue 'green)
+         (list 44 55 'green 'blue))
+   ))
 
 (define (spectrotone-color name pitch)
   (define lname (string-downcase name))
