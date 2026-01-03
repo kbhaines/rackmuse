@@ -2,7 +2,8 @@
 
 (require racket/bytes
          racket/list
-         racket/string)
+         racket/string
+         "spectrotone.rkt")
 
 (struct evt (tick kind chan a b) #:transparent)
 (struct note (track chan pitch start end) #:transparent)
@@ -334,7 +335,7 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count overtone-bloom? overtone-bloom-base?)
+(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count overtone-bloom? overtone-bloom-base? spectrotone?)
   (define note-h 16)
   (define pad-x 140)
   (define pad-y 20)
@@ -434,6 +435,10 @@
       [else
        (define tt (/ (- t1 0.66) 0.34))
        (rgb->hex (lerp 255 220 tt) (lerp 210 60 tt) (lerp 0 40 tt))]))
+
+  (define (spectrotone-track-color tid pitch)
+    (define name (hash-ref track-names tid ""))
+    (spectrotone-color name pitch))
 
   (define pre-legend-ids
     (if unified? (sort (remove-duplicates (map note-track notes)) <) '()))
@@ -590,7 +595,8 @@
     (define label (if tname tname (format "Track ~a" tid)))
     (define class-name (format "note track-~a" tid))
     (define rects (list (note-rect n max-p y0 base 0.85 base-h label class-name)))
-    (if (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
+    (if (and (not spectrotone?)
+             (number? overtone-count) (>= overtone-count 1) (<= base 72))
         (append
          rects
          (for/list ([p (overtone-pitches base)]
@@ -603,10 +609,9 @@
         rects))
 
   (define (bloom-elements tnotes max-p y0)
-    (if (and overtone-bloom? (number? overtone-count) (>= overtone-count 1))
+    (if (or spectrotone? overtone-bloom?)
         (let ([items '()])
-          (define (add-bloom pitch intensity ns ne)
-            (define color (heat-color intensity))
+          (define (add-bloom pitch intensity ns ne color)
             (define opacity (* 0.35 intensity))
             (define scale (+ 0.7 (* 0.6 intensity)))
             (define rx (* (/ division 2.0) px-per-tick scale))
@@ -625,15 +630,21 @@
             (define ns (note-start n))
             (define ne (note-end n))
             (when (and (< ns window-end) (> ne window-start))
+              (define tid (note-track n))
               (define base (note-pitch n))
-              (when (and overtone-bloom-base? (<= base 127))
-                (add-bloom base 1.0 ns ne))
-              (when (<= base 72)
-                (for ([p (overtone-pitches base)]
-                      [i (in-naturals 0)]
-                      #:when (and (< i overtone-count) (<= p 77)))
-                  (define intensity (exp (* -0.6 i)))
-                  (add-bloom p intensity ns ne)))))
+              (if spectrotone?
+                  (let ([c (spectrotone-track-color tid base)])
+                    (when c
+                      (add-bloom base 1.0 ns ne c)))
+                  (begin
+                    (when (and overtone-bloom-base? (<= base 127))
+                      (add-bloom base 1.0 ns ne (heat-color 1.0)))
+                    (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
+                      (for ([p (overtone-pitches base)]
+                            [i (in-naturals 0)]
+                            #:when (and (< i overtone-count) (<= p 77)))
+                        (define intensity (exp (* -0.6 i)))
+                        (add-bloom p intensity ns ne (heat-color intensity))))))))
           (string-join (reverse items) "\n"))
         ""))
 
@@ -793,7 +804,7 @@
 
   (set! height (+ base-height legend-h))
   (define bloom-defs
-    (if overtone-bloom?
+    (if (or spectrotone? overtone-bloom?)
         "<defs><filter id='bloom-blur'><feGaussianBlur stdDeviation='6'/></filter></defs>\n"
         ""))
   (define svg
@@ -826,7 +837,7 @@
     #:exists 'replace))
 
 (define (usage)
-  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--svg-overtones-bloom] [--svg-overtones-bloom-base] [--svg-overtones-bloom-all] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
+  (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--svg-overtones-bloom] [--svg-overtones-bloom-base] [--svg-overtones-bloom-all] [--svg-spectrotone] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
@@ -837,6 +848,7 @@
   (displayln "  --svg-overtones-bloom Render overtones as blurred heat-map bloom")
   (displayln "  --svg-overtones-bloom-base Include fundamental in bloom layer")
   (displayln "  --svg-overtones-bloom-all Enable bloom + fundamental in one flag")
+  (displayln "  --svg-spectrotone Use spectrotone bloom instead of overtone bloom")
   (displayln "  --track-only LIST   Include only track numbers (e.g., 0,2,4 or 1-3)")
   (displayln "  --track-except LIST Exclude track numbers (e.g., 1,3 or 2-5)")
   (displayln "  --track-function    Enable function coloring and keep :suffix in names")
@@ -856,6 +868,7 @@
   (define svg-overtones-bloom? (member "--svg-overtones-bloom" args))
   (define svg-overtones-bloom-base? (member "--svg-overtones-bloom-base" args))
   (define svg-overtones-bloom-all? (member "--svg-overtones-bloom-all" args))
+  (define svg-spectrotone? (member "--svg-spectrotone" args))
   (define bloom? (or svg-overtones-bloom? svg-overtones-bloom-all?))
   (define bloom-base? (or svg-overtones-bloom-base? svg-overtones-bloom-all?))
   (define svg-width-idx (index-of args "--svg-width"))
@@ -901,7 +914,7 @@
     (track-info-from-tracks filtered-tracks track-function?))
   (define text-events (text-events-from-tracks filtered-tracks))
   (when svg-path
-    (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones bloom? bloom-base?)
+    (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones bloom? bloom-base? svg-spectrotone?)
     (displayln (format "Wrote ~a" svg-path)))
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
