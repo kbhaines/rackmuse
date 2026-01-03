@@ -83,12 +83,12 @@
   ;; (mk-track "Oboe2" (project-chords trombones-b b-chords first oct+++))
 
   (mk-track "Oboe 1:melody" (project-notes (append melody-a1 melody-a2)))
-  (mk-track "Violins 1" (project-chords rhy-a1 (append chords-a1 chords-a2) second va8))
-  (mk-track "Violins 2" (project-chords harm-rhy (append chords-a1 chords-a2) third va8))
-  (mk-track "Cello" (project-chords rhy-a1 (append chords-a1 chords-a2) first))
+  (mk-track "Violins 2" (project-chords harm-rhy (append chords-a1 chords-a2) second va8 ))
+  (mk-track "Violas" (project-chords harm-rhy (append chords-a1 chords-a2) third))
+  (mk-track "Cello" (project-chords harm-rhy (append chords-a1 chords-a2) first))
 
-  (mk-track "Horn 1" (project-chords harm-rhy (append chords-a1 chords-a2) third))
-  (mk-track "Horn 2" (project-chords harm-rhy (append chords-a1 chords-a2) second va8))
-  (mk-track "Trombone 1" (project-chords harm-rhy (append chords-a1 chords-a2) first))
+  ;; (mk-track "Horn 1" (project-chords harm-rhy (append chords-a1 chords-a2) third))
+  ;; (mk-track "Horn 2" (project-chords harm-rhy (append chords-a1 chords-a2) second va8))
+  ;; (mk-track "Trombone 1" (project-chords harm-rhy (append chords-a1 chords-a2) first))
   ))
 

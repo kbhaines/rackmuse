@@ -478,7 +478,7 @@
      (define notes-y (+ text-y text-lane-h))
      (set! track-views (list (list 'all notes min-p max-p notes-y lane-h text-y)))
      (set! height (+ pad-y lane-h))
-      (set! legend-ids pre-legend-ids)
+     (set! legend-ids pre-legend-ids)
      (set! legend-h (if (null? legend-ids) 0 (+ 10 (* (length legend-ids) 12))))]
     [else
      (define by-track (make-hash))
@@ -612,7 +612,7 @@
     (if (or spectrotone? overtone-bloom?)
         (let ([items '()])
           (define (add-bloom pitch intensity ns ne color)
-            (define op-base (if spectrotone? 0.55 0.35))
+            (define op-base (if spectrotone? 0.85 0.35))
             (define size-base (if spectrotone? 0.9 0.7))
             (define size-gain (if spectrotone? 0.9 0.6))
             (define opacity (* op-base intensity))
