@@ -149,7 +149,6 @@
   ;; converts a list of notes (which may include rests) into absolute spans, ready for midi rendering.
 
   (define note-spans (gen-spans notes note-duration))
-  (displayln note-spans)
   (for/list ([p note-spans])
     (define start (span-start p))
     (define data (cdr (span-data p)))

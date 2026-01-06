@@ -37,7 +37,7 @@
   (define pad (- length (foldl + 0 ds)))
   (append ds (list (- 0 pad) )))
 
-(displayln (pad-right bar q q q))
+;; (displayln (pad-right bar q q q))
 ;; (exit 1)
 
 (define mel-rhy-a1
@@ -92,7 +92,7 @@
         (values (cdr ps) (cons (mk-note (car ps) d) ns))
         (values ps (cons (mk-note 0 d) ns)))))
 
-(displayln (zip-notes mel-rhy-a1 pitches-a1))
+;; (displayln (zip-notes mel-rhy-a1 pitches-a1))
 ;; (exit 1)
 (define mel-notes2
   (for/list ([d mel-rhy-a])

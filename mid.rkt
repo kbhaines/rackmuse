@@ -142,36 +142,7 @@
        (bytes-append acc (make-note-track chan trk trk-name))
        (add1 chan))))
 
-  (displayln (bytes-length file-bytes))
+  ;; (displayln (bytes-length file-bytes))
   (call-with-output-file path
     (λ (out) (write-bytes file-bytes out))
     #:exists 'replace))
-
-;; ---------- file assembly ----------
-(define (make-midi-file path)
-  (define ntrks 5) ; meta + 4 note tracks
-
-  ;; MIDI header: "MThd" length=6 format=1 ntrks division
-  (define header
-    (bytes-append #"MThd"
-                  (u32be 6)
-                  (u16be 1)
-                  (u16be ntrks)
-                  (u16be PPQ)))
-
-  (define trk0 (make-meta-track))
-
-  ;; chord tones: C2=36, G2=43, E3=52, C4=60
-  (define trk1 (make-note-track 1 0 36 "C2"))
-  (define trk2 (make-note-track 2 1 43 "G2"))
-  (define trk3 (make-note-track 3 2 52 "E3"))
-  (define trk4 (make-note-track 4 3 60 "C4"))
-
-  (define file-bytes (bytes-append header trk0 trk1))
-  (call-with-output-file path
-    (λ (out) (write-bytes file-bytes out))
-    #:exists 'replace))
-
-(module+ main
-  (make-midi-file "poc.mid")
-  (displayln "Wrote poc.mid"))

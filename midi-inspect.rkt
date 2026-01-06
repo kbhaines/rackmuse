@@ -146,7 +146,8 @@
   (for ([e evts])
     (when (memq (evt-kind e) '(note-on note-off))
       (set! note-count (add1 note-count))))
-  (displayln (format "Track ~a: ~a events (~a note events)" idx total note-count))
+  ;; (displayln (format "Track ~a: ~a events (~a note events)" idx total note-count)
+  
   (for ([e evts])
     (define kind (evt-kind e))
     (unless (and notes-only?
@@ -167,7 +168,9 @@
           [(time-signature) (format "time-signature ~a/~a" a b)]
           [(sysex) (format "sysex len ~a" a)]
           [else (format "~a ch~a a~a b~a" kind chan a b)]))
-      (displayln (format "  t=~a  ~a" (evt-tick e) desc)))))
+      #t
+      ;; (displayln (format "  t=~a  ~a" (evt-tick e) desc))
+      )))
 
 (define (notes-from-tracks tracks)
   (define open (make-hash)) ; key -> list of start ticks (stack)
@@ -312,11 +315,11 @@
     (define tnotes (reverse (hash-ref by-track ti)))
     (define min-p (apply min (map note-pitch tnotes)))
     (define max-p (apply max (map note-pitch tnotes)))
-    (displayln (format "Track ~a" ti))
+    ;; (displayln (format "Track ~a" ti))
     (define guide (make-string total-cols #\-))
     (for ([bc bar-cols] #:when (< bc total-cols))
       (string-set! guide bc #\|))
-    (displayln (format "     ~a" guide))
+    ;; (displayln (format "     ~a" guide))
     (for ([p (in-range max-p (sub1 min-p) -1)])
       (define row (make-string total-cols #\space))
       (for ([n tnotes] #:when (= (note-pitch n) p))
@@ -326,8 +329,8 @@
           (string-set! row i #\#)))
       (for ([bc bar-cols] #:when (< bc total-cols))
         (when (char=? (string-ref row bc) #\space)
-          (string-set! row bc #\|)))
-      (displayln (format "~a ~a" (~a (note-name p) #:width 4) row)))
+          (string-set! row bc #\|))))
+      ;; (displayln (format "~a ~a" (~a (note-name p) #:width 4) row)))
     (newline)))
 
 (define (svg-color idx)
@@ -909,7 +912,7 @@
       [else (λ (i) #t)]))
   (define filtered-tracks
     (for/list ([t tracks] [i (in-naturals 0)] #:when (track-filter i)) t))
-  (displayln (format "Format ~a, Tracks ~a, Division ~a PPQ" fmt ntrks division))
+  ;; (displayln (format "Format ~a, Tracks ~a, Division ~a PPQ" fmt ntrks division))
   (for ([t filtered-tracks] [i (in-naturals 0)])
     (print-track i t notes-only?))
   (define notes (notes-from-tracks filtered-tracks))
@@ -919,6 +922,7 @@
   (define text-events (text-events-from-tracks filtered-tracks))
   (when svg-path
     (write-svg svg-path notes division time-sigs svg-unified? track-names track-functions track-function? svg-width svg-bars svg-bar-range text-events svg-overtones bloom? bloom-base? svg-spectrotone?)
-    (displayln (format "Wrote ~a" svg-path)))
+    ;; (displayln (format "Wrote ~a" svg-path))
+    )
   (when ascii?
     (write-ascii notes division time-sigs ascii-cols)))
