@@ -64,10 +64,10 @@
 (define eighths (* bars 8))   ; 4 bars * 8 eighths per bar = 32
 
 ;; 120 bpm => 500000 microseconds per quarter note
-(define tempo-us-per-q 500000)
 
 ;; ---------- track 0 (conductor/meta track) ----------
-(define (make-meta-track nn dd [key-sig '(0 0)])
+(define (make-meta-track nn dd tempo [key-sig '(0 0)])
+  (define tempo-us-per-q (round(/ 60000000 tempo)))
   (define sig (if (< (car key-sig) 0) (+ 256 (car key-sig)) (car key-sig)))
   (define data
     (bytes-append
@@ -117,7 +117,7 @@
       (values (bytes-append acc note) (+ (car n) len))))
   (mtrk (bytes-append data end)))
 
-(define (make-midi-track-file time-sig key-sig path tracks)
+(define (make-midi-track-file time-sig qtempo key-sig path tracks)
   (define ntrks (+ 1 (length tracks)))
 
   ;; MIDI header: "MThd" length=6 format=1 ntrks division
@@ -128,7 +128,7 @@
                   (u16be ntrks)
                   (u16be PPQ)))
 
-  (define trk0 (make-meta-track (car time-sig) (cadr time-sig) key-sig))
+  (define trk0 (make-meta-track (car time-sig) (cadr time-sig) qtempo key-sig))
 
   ;; chord tones: C2=36, G2=43, E3=52, C4=60
   (define file-bytes

@@ -98,6 +98,7 @@
 
    (list "violin"
          (list
+          (list 0 54 'black 'black)
           (list 55 62 'purple 'blue)
           (list 62 69 'blue 'green)
           (list 69 76 'green 'yellow)
@@ -105,6 +106,7 @@
           (list 89 100 'white 'white)))
    (list "viola"
          (list
+          (list 0 47 'black 'black)
           (list 48 55 'purple 'blue)
           (list 55 62 'blue 'green)
           (list 62 69 'green 'yellow)
@@ -112,15 +114,18 @@
           (list 81 93 'white 'white)))
    (list "cello"
          (list
+          (list 0 35 'black 'black)
           (list 36 43 'purple 'blue)
           (list 43 50 'blue 'green)
           (list 50 57 'green 'yellow)
           (list 57 69 'yellow 'white)
           (list 70 81 'white 'white)))
    (list "double bass"
-         (list 24 38 'purple 'blue)
-         (list 39 43 'blue 'green)
-         (list 44 55 'green 'blue))
+         (list
+          (list 0 23 'black 'black)
+          (list 24 38 'purple 'blue)
+          (list 39 43 'blue 'green)
+          (list 44 55 'green 'blue)))
    ))
 
 (define (spectrotone-color name pitch)

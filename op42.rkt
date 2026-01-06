@@ -40,6 +40,7 @@
 (displayln (project-notes melody))
 
 (make-midi-track-file '(6 8)
+                      80
                       '(-2 0)
                       "intro.mid"
                       (list
@@ -107,6 +108,7 @@
 
 (make-midi-track-file
  '(6 8)
+ 80
  '(-2 0)
  "b-section.mid"
  (list

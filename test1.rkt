@@ -32,6 +32,7 @@
 ;; (pretty-display (project-notes melody))
 ;; (pretty-display (project-chords dbass chords first))
 (make-midi-track-file '(6 8)
+                      80
                       '(-2 0)
                       "out.mid"
                       (list
