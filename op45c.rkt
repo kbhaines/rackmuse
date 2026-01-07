@@ -44,34 +44,28 @@
   (list
     h qr e e
     h qr e e
-    h qr q
+    h h
     h hr
 
     h qr e e
-    q hr q
-    q q qr q
+    h qr e e
+    h q er e
     h hr
 
-   ;; dq e dq e ;;e e dq qr e
-   ;; q q q qr
-   ;; dq e dq e ;;e e dq qr e
-   ;; q q q qr
-
-   ;; e e dq qr e
-   ;; h
    ))
 
 (define pitches-a1
   (list
-    cs4 cs4 ds4
-    e4 ds4 e4
-    fs4 e4
-    gs4
 
-    fs4 e4 ds4
-    fs4 ds4 
-    e4 fs4 ds4 
-    cs4
+    e4 f4 e4
+    g4 f4 e4
+    a4 c5
+    g4
+
+    g4 f4 e4 
+    g4 a4 b4
+    c5 d5 c5
+    b4
 
    ;; cs4 ds4 ds4
    ;; e4 fs4 gs4 b3 ;;cs4
