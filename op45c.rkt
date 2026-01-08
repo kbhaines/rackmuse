@@ -62,8 +62,18 @@
     a4 c5
     g4
 
-    g4 f4 e4 
-    g4 a4 b4
+    f4 e4 d4 
+    f4 e4 d4
+    g4 f4 e4
+    d4
+
+    e4 f4 e4
+    g4 g4 f4
+    a4 c5
+    g4
+
+    f4 f4 e4 
+    g4 b4 a4
     c5 d5 c5
     b4
 
@@ -101,7 +111,7 @@
 
   (mk-track "melody1" (project-notes (zip-notes mel-rhy-a1 pitches-a1)))
 
-  (mk-track "Violins 1" (project-notes (zip-notes mel-rhy-a1 pitches-a1) vb8))
+  ;; (mk-track "Violins 1" (project-notes (zip-notes mel-rhy-a1 pitches-a1) vb8))
   ;; (mk-track "Violins 2" (project-chords h-rhy-a chords-a third va8))
   ;; (mk-track "Violas" (project-chords h-rhy-a chords-a second))
   ;; (mk-track "Cello" (project-chords h-rhy-a chords-a first))
