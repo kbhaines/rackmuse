@@ -13,6 +13,8 @@
 
  project-chords
  project-notes
+ pitch-scale-degrees
+ zip-notes
 
  mk-track track-name track-spans
 
@@ -29,6 +31,8 @@
  c6 cs6 df6 d6 ds6 ef6 e6 f6 fs6 gf6 g6 gs6 af6 a6 as6 bf6 b6
  c7 cs7 df7 d7 ds7 ef7 e7 f7 fs7 gf7 g7 gs7 af7 a7 as7 bf7 b7
  c8
+
+ major-scale
  )
 
 (define PPQ 480)
@@ -156,6 +160,22 @@
           (span-length p)
           (if (number? data) (transpose data) data))))
 
+(define (pitch-scale-degrees scale root pitches)
+  (for/list ([p pitches])
+    (define pp (modulo (- p root) 12))
+    (index-of scale pp)))
+
+(define (zip-notes durations pitches)
+  (for/fold
+   ([ps pitches]
+    [ns '()] #:result (reverse ns))
+   ([d durations]
+    #:break (null? ps))
+    (if (> d 0)
+        (values (cdr ps) (cons (mk-note (car ps) d) ns))
+        (values ps (cons (mk-note 0 d) ns)))))
+
+(define major-scale '(0 2 4 5 7 9 11))
 (define join (compose flatten append))
 
 (define (va8 n) (+ n 12))

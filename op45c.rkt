@@ -44,7 +44,7 @@
   (list
     h qr e e
     h qr e e
-    h h
+    h q q
     h hr
 
     h qr e e
@@ -58,8 +58,8 @@
   (list
 
     e4 f4 e4
-    g4 f4 e4
-    a4 c5
+    g4 g4 f4
+    a4 c5 a4
     g4
 
     f4 e4 d4 
@@ -86,30 +86,30 @@
    ;; e4
    ))
 
-(define (zip-notes durations pitches)
-  (for/fold
-   ([ps pitches]
-    [ns '()] #:result (reverse ns))
-   ([d durations]
-    #:break (null? ps))
-    (if (> d 0)
-        (values (cdr ps) (cons (mk-note (car ps) d) ns))
-        (values ps (cons (mk-note 0 d) ns)))))
+(define bass-notes-a
+  (list
+    c3
+    c3
+    f3
+    c3
+    d3
+    d3
+    f3
+    g3))
 
-;; (displayln (zip-notes mel-rhy-a1 pitches-a1))
-;; (exit 1)
-(define mel-notes2
-  (for/list ([d mel-rhy-a])
-    (cons d c4)))
+
+(define bass-rhythm 
+  (repeat 8 q qr q qr))
 
 (make-midi-track-file
  '(4 4)
- 100   ;; 80bpm
+ 100     ;; 80bpm
  '(-2 0) ;; bflat
  "op45c.mid"
  (list
 
   (mk-track "melody1" (project-notes (zip-notes mel-rhy-a1 pitches-a1)))
+  ;; (mk-track "bass1" (project-chords bass-rhythm bass-notes-a first))
 
   ;; (mk-track "Violins 1" (project-notes (zip-notes mel-rhy-a1 pitches-a1) vb8))
   ;; (mk-track "Violins 2" (project-chords h-rhy-a chords-a third va8))
