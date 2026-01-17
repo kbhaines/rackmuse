@@ -61,6 +61,10 @@
           (list 68 77 'green 'yellow)
           (list 78 82 'yellow 'white)
           (list 83 92 'white 'white)))
+   (list "cor anglais"
+         (list
+           (list 52 67 'red 'orange)
+           (list 68 84 'orange 'orange)))
    (list "bassoon"
          (list
           (list 34 72 'green 'green)))

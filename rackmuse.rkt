@@ -8,7 +8,8 @@
 
  repeat rest dot
 
- mk-chord chord-notes chord-duration
+ mk-chord chord-notes chord-duration inv
+ major minor
  mk-note note-note note-duration
 
  project-chords
@@ -33,6 +34,8 @@
  c8
 
  major-scale
+ durations-of
+ notes-of
  )
 
 (define PPQ 480)
@@ -88,6 +91,13 @@
 (define (mk-chord duration . notes) (list duration notes))
 (define chord-duration car)
 (define chord-notes cadr)
+
+(define (major duration root) (mk-chord duration root (+ root 4) (+ root 7)))
+(define (minor duration root) (mk-chord duration root (+ root 3) (+ root 7)))
+
+(define (inv chord [degree 1])
+  (define-values (p1 p2) (split-at (chord-notes chord) degree))
+  (apply mk-chord (chord-duration chord) (append p2 (map va8 p1))))
 
 (define (mk-note note duration) (cons duration note))
 (define note-duration car)
@@ -189,3 +199,5 @@
 (define track-name car)
 (define track-spans cadr)
 
+(define (durations-of is) (map car is))
+(define (notes-of is) (map cdr is))
