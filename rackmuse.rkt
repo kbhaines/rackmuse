@@ -179,9 +179,8 @@
   (for/fold
    ([ps pitches]
     [ns '()] #:result (reverse ns))
-   ([d durations]
-    #:break (null? ps))
-    (if (> d 0)
+   ([d durations])
+    (if (and (> d 0) ps)
         (values (cdr ps) (cons (mk-note (car ps) d) ns))
         (values ps (cons (mk-note 0 d) ns)))))
 

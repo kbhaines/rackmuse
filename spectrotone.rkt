@@ -63,8 +63,8 @@
           (list 83 92 'white 'white)))
    (list "cor anglais"
          (list
-           (list 52 67 'red 'orange)
-           (list 68 84 'orange 'orange)))
+          (list 52 67 'red 'orange)
+          (list 68 84 'orange 'orange)))
    (list "bassoon"
          (list
           (list 34 72 'green 'green)))
@@ -76,7 +76,7 @@
           (list 35 41 'gray 'purple)
           (list 41 55 'purple 'brown)
           (list 55 68 'brown 'red)
-          (list 68 79 'red 'red)
+          (list 68 79 'red 'white)
           (list 70 81 'white 'white)))
    (list "trumpet"
          (list

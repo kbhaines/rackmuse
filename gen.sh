@@ -9,5 +9,6 @@ set -e
 racket -l errortrace -t $rktfile
 #racket midi-inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg-overtones 1 --svg-overtones-bloom --svg $outfile
 racket midi-inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg-spectrotone --svg $outfile
+# racket midi-inspect.rkt $midifile --svg-width 1200  --svg $outfile
 #racket midi-inspect.rkt $midifile --svg-width 1200  --svg-unified  --svg $outfile
 #open -a safari $outfile

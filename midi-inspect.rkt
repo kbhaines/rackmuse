@@ -147,7 +147,7 @@
     (when (memq (evt-kind e) '(note-on note-off))
       (set! note-count (add1 note-count))))
   ;; (displayln (format "Track ~a: ~a events (~a note events)" idx total note-count)
-  
+
   (for ([e evts])
     (define kind (evt-kind e))
     (unless (and notes-only?
@@ -330,7 +330,7 @@
       (for ([bc bar-cols] #:when (< bc total-cols))
         (when (char=? (string-ref row bc) #\space)
           (string-set! row bc #\|))))
-      ;; (displayln (format "~a ~a" (~a (note-name p) #:width 4) row)))
+    ;; (displayln (format "~a ~a" (~a (note-name p) #:width 4) row)))
     (newline)))
 
 (define (svg-color idx)
@@ -404,7 +404,8 @@
       [(or (string-contains? name "flute")
            (string-contains? name "oboe")
            (string-contains? name "clarinet")
-           (string-contains? name "bassoon"))
+           (string-contains? name "bassoon")
+           (string-contains? name "cor anglais"))
        'woodwind]
       [else 'other]))
 
