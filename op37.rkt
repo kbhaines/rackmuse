@@ -50,6 +50,7 @@
 
 (define inner-pulse-a (repeat 8 e er dh ))
 
+(define tacet4 (cons (* 4 barr) 0))
 (define tacet8 (cons (* 8 barr) 0))
 
 (generate-midi
@@ -70,58 +71,57 @@
 
 (define chords-b
   (list
-   (mk-chord bar fs2 e3 a3 d4)  ;; Dadd9/F#
-
-   (mk-chord q g2 e3 a3 d4)     ;; Gadd6
+   (mk-chord q g2 d3 a3 d4)     ;; Gadd6
    (mk-chord dh g2 d3 b3 e4)
+   (mk-chord bar fs2 e3 a3 d4)  ;; Dadd9/F#
    ))
 
 (define melody-b1
-  (zip-notes (repeat 2
-                     q q h
-                     q q q qr
-                     )
+  (zip-notes
+   (list
+    q q q q
+    q q q qr
+    q q q q
+    dq e q qr
+    )
+   (list
+    a3 g4 fs4 d4
+    a3 d4 fs4
+    a3 g4 fs4 d4
+    a4 fs4 d4 )))
 
-             (list e4 a4 d5
-                   cs5 b4 a4
-
-                   e4 a4 d5 ;; e4 fs4 g4
-                   e5 d5 cs5)))
 
 (define melody-b2
-  (zip-notes (list
-              q q dq e
-              dq e q qr
-              )
+  (zip-notes
+   (list
+    q q q q
+    q q q qr
+    q q q q
+    dq e q qr
+    )
 
-             (list a4 d5 e5 d5 ;;e4 a4 d5
-                   fs5 e5 d5)))
-
-(define melody-b3
-  (zip-notes (list
-              q q dq er
-              q q dq e
-              w
-              )
-
-             (list g5 fs5 e5
-                   e5 d5 cs5 b4
-                   c5)))
+   (list
+    e4 a4 d5 a4
+    d4 g4 fs4
+    e4 a4 d5 a4
+    fs5 e5 d5
+    )))
 
 
 
 ;; (define section-b-rhy (repeat 2 w q dh))
 (define section-b-rhy (repeat 4 (+ w q) dh))
 
-(define section-b-v1-rhy (repeat 4 qr w dh))
+(define section-b-v1-rhy (repeat 4 h hr))
 
 (generate-midi
  'b
  (list
 
-  (mk-track "Flute 1" (project-notes (append melody-b1 melody-b2 melody-b3) va8))
+  (mk-track "Bassoon 1" (project-notes  melody-b1))
+  (mk-track "Clarinet 1" (project-notes  (cons tacet4 melody-b2)))
 
-  (mk-track "Clarinet 1" (project-chords section-b-v1-rhy chords-b fourth va8))
+  ;; (mk-track "Clarinet 1" (project-chords section-b-rhy chords-b fourth va8))
   ;; (mk-track "Clarinet 2" (project-chords section-b-rhy chords-b third ))
   ;; (mk-track "Bassoon 1" (project-chords section-b-rhy chords-b second ))
   (mk-track "Bassoon 2" (project-chords (repeat 4 w w) chords-b first ))
@@ -131,8 +131,8 @@
   ;; (mk-track "Horn 3" (project-chords section-b-rhy chords-b second ))
   ;; (mk-track "Trombone 1" (project-chords (repeat 4 w w) chords-b first ))
 
-  (mk-track "Violins 1" (project-chords section-b-v1-rhy chords-b fourth va8 ))
-  (mk-track "Violins 2" (project-chords section-b-rhy chords-b third ))
+  ;; (mk-track "Violins 1" (project-chords section-b-rhy chords-b fourth va8 ))
+  ;; (mk-track "Violins 2" (project-chords section-b-rhy chords-b second va8 ))
   (mk-track "Viola" (project-chords section-b-rhy chords-b second ))
   (mk-track "Cello" (project-chords (repeat 4 w w) chords-b first ))
 
@@ -142,13 +142,14 @@
 ;; Chords - Dadd4, Gadd9
 
 (define section-c-rhy
-  (repeat 2(list
-            q q q er e
-            q q q qr
-            )))
+  (repeat 2 (list
+             h h
+             h h
+             ;; q h er e
+             )))
 
 (define section-c-bass-rhy
-  (repeat 4 (list q h q)))
+  (repeat 2 (list q w dh)))
 
 (define chords-a2
   (list
@@ -162,6 +163,15 @@
    (major bar c4)
 
    ))
+(define inner-colour
+  (list
+   (cons dbar a4)
+   (cons dbar g4)
+   (cons bar b4)
+   (cons bar e4)
+   (cons bar a4)
+   (cons bar e4)
+   ))
 (generate-midi
  'c1
  (list
@@ -173,13 +183,15 @@
   ;; Bassoon is filling cello's A-place
   (mk-track "Bassoon 1" (project-chords (repeat 2 section-c-bass-rhy) chords-a2 first vb8))
 
-  (mk-track "Trombone 1" (project-chords (repeat 2 section-c-rhy) chords-a2 third vb8 ))
+  (mk-track "Trombone 1" (project-chords (repeat 2 section-c-rhy) chords-a2 first ))
 
   ;; Violas take over A-V2, Cello takes over A-Viola, DB plays A-Cello (vb8)
 
-  (mk-track "Violas" (project-chords (repeat 2 section-c-rhy) chords-a2 third))
-  (mk-track "Cello" (project-chords (repeat 2 section-c-rhy) chords-a2 second ))
-  (mk-track "Double Bass" (project-chords (repeat 2 section-c-bass-rhy) chords-a2 first vb16))
+  (mk-track "Violas" (project-chords (repeat 2 section-c-rhy) chords-a2 second va8))
+  (mk-track "Cello" (project-chords (repeat 2 section-c-rhy) chords-a2 third ))
+
+  (mk-track "Horn 2" (project-notes inner-colour))
+  (mk-track "Double Bass" (project-chords (repeat 2 section-c-bass-rhy) chords-a2 first vb8))
 
   ))
 

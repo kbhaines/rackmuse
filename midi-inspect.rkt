@@ -399,7 +399,7 @@
       [(or (string-contains? name "violin")
            (string-contains? name "viola")
            (string-contains? name "cello")
-           (string-contains? name "bass"))
+           (string-contains? name "double bass"))
        'strings]
       [(or (string-contains? name "flute")
            (string-contains? name "oboe")
