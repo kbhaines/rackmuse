@@ -104,10 +104,10 @@
          (list
           (list 0 54 'black 'black)
           (list 55 62 'purple 'blue)
-          (list 62 69 'blue 'green)
-          (list 69 76 'green 'yellow)
-          (list 76 89 'yellow 'white)
-          (list 89 100 'white 'white)))
+          (list 63 69 'blue 'green)
+          (list 70 76 'green 'yellow)
+          (list 77 89 'yellow 'white)
+          (list 90 100 'white 'white)))
    (list "viola"
          (list
           (list 0 47 'black 'black)

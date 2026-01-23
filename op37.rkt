@@ -29,9 +29,6 @@
    (major dbar g3)
    (inv (major dbar d3))
    (minor dbar e3)        ;; dissonance c/b with melody -8vb; sounds OK
-
-   ;; (mk-chord bar a3 a3 c4)
-   ;; (mk-chord bar c4 c4 e4)
    (minor bar a3)
    (major bar c4)
 
@@ -43,6 +40,7 @@
    (cons dq d5) (cons e b4) (cons h a4) ; bar 2
    (cons qr 0) (cons q b4) (cons q a4) (cons q b4) ; bar 3
    (cons dq fs5) (cons e g5) (cons q fs5) (cons q d5) ; bar 4
+
    (cons qr 0) (cons q d5) (cons q b4) (cons q g4) ; bar 5
    (cons h e5) (cons dq c5) (cons e b4) ; bar 6
    (cons h c5) (cons dq b4) (cons e a4) ; bar 7
@@ -53,6 +51,7 @@
 
 (define tacet4 (cons (* 4 barr) 0))
 (define tacet8 (cons (* 8 barr) 0))
+(define tacet16 (cons (* 16 barr) 0))
 
 (generate-midi
  'a
@@ -147,19 +146,13 @@
 (set! meter '(4 4))
 (set! bar (* 4 q))
 
-(define section-c-heart-rhy (repeat 1 e er q h qr q q q))
-
-(define section-c-rhy
-  (repeat 2 (list
-             h h
-             h h
-             ;; q h er e
-             )))
-
-(define section-c-bass-rhy
-  (repeat 2 (list e er h q )))
+(define section-c-harm-rhy (repeat 2 e er dh ))
+(define section-c-decor (repeat 1 e e dw qr))
 
 (define chords-c
+
+  ;; chords-c is the same as chords-a but with the added fourth voice for the colour
+
   (list
    ;; The fourth note is the colour voice for horn
    (mk-chord dbar g3 b3 d4 a4)
@@ -172,28 +165,61 @@
    ;; (mk-chord bar c4 c4 e4)
    (mk-chord bar a3 c4 e4 a4)
    (mk-chord bar c4 e4 g4 e4)
+
+   ;; repeat, but different cadence from Em
+   (mk-chord dbar g3 b3 d4 a4)
+   (mk-chord bar fs3 a3 d4 g4)
+   (mk-chord bar fs3 a3 d4 a4)
+
+   (mk-chord bar e3 a3 b3 fs4) ;; Es2
+   (mk-chord bar e3 g3 b3 e4)
+
+   (mk-chord dbar a3 c4 e4 g4) ;; Am7
+   (mk-chord dbar c4 d4 g4 e4) ;; Cs2
+
+   (mk-chord bar g3 a3 d4 a4)  ;; Gs2
+   (mk-chord bar g3 b3 d4 a4)  ;; G
    ))
 
+(define melody-coda
+  (zip-notes
+   (list
+    dq e h
+    wr
+    dq e h
+    wr
+    dq e h
+    wr
+    w
+    w
+    )
+   (list
+    fs5 g5 d5
+    c5 d5 a4
+    e4 g4 fs4
+    c4 a3
+    )))
+
+(define clen 10)
+(define melc1 (append melody-a (take melody-a 15) melody-coda))
 (generate-midi
  'c1
  (list
 
+  (mk-track bassoon-1 (project-chords (repeat clen section-c-harm-rhy) chords-c first))
+
+  (mk-track horn-2 (project-chords (repeat clen section-c-decor) chords-c fourth))
+  (mk-track trombone-1 (project-chords (repeat clen section-c-harm-rhy) chords-c third ))
+
   ;; Melody onto V1/V2 in octaves
-  (mk-track violins-1 (project-notes melody-a va8))
-  (mk-track violins-2 (project-notes melody-a ))
+  (mk-track violins-1 (project-notes melc1 va8))
+  (mk-track violins-2 (project-notes melc1 ))
 
-  ;; Bassoon is filling cello's A-place
-  (mk-track bassoon-1 (project-chords (repeat 4 section-c-bass-rhy) chords-c first vb8))
+  ;; (mk-track "Melodyc" (project-notes melc va8))
 
-  (mk-track horn-2 (project-chords (repeat 4 section-c-bass-rhy) chords-c fourth))
-  (mk-track violas (project-chords (repeat 4 section-c-bass-rhy) chords-c fourth))
-
-
-  ;; Violas take over A-V2, Cello takes over A-Viola, DB plays A-Cello (vb8)
-
-  (mk-track trombone-1 (project-chords (repeat 4 section-c-bass-rhy) chords-c third ))
-  (mk-track cellos (project-chords (repeat 4 section-c-bass-rhy) chords-c first ))
-  (mk-track double-bass (project-chords (repeat 4 section-c-bass-rhy) chords-c first vb8))
+  (mk-track violas (project-chords (repeat clen section-c-harm-rhy) chords-c fourth))
+  (mk-track cellos (project-chords (repeat clen section-c-harm-rhy) chords-c first ))
+  (mk-track double-bass (project-chords (repeat clen section-c-harm-rhy) chords-c first vb8))
 
   ))
 
