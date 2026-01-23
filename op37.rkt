@@ -146,9 +146,10 @@
 (set! meter '(4 4))
 (set! bar (* 4 q))
 
-(define section-c-harm-rhy (repeat 2 q (+ h e) er))
+(define section-c-harm-rhy (repeat 1 h h h dq e))
 (define section-c-decor (repeat 1 e e dw qr))
-(define section-c-bass-rhy (repeat 2 q (+ h e) e))
+;; (define section-c-bass-rhy (repeat 2 q (+ h e) e))
+(define section-c-bass-rhy section-c-harm-rhy)
 
 (define chords-c
 
@@ -168,7 +169,7 @@
    ;; repeat, but different cadence from Em
    (mk-chord dbar g3 b3 d4 a4)
    (mk-chord bar fs3 a3 d4 g4)
-   (mk-chord bar fs3 a3 d4 a4)
+   (mk-chord bar d3 fs3 a3 a4)
 
    (mk-chord bar e3 a3 b3 fs4) ;; Es2-add4
    (mk-chord bar e3 g3 b3 e4)
@@ -186,26 +187,36 @@
    (list d5 b4 a4)))
 
 (define melody-coda
+
+  ;; starts at bar12 of section
+
   (zip-notes
    (list
-    dq e h
-    wr
-    dq e h
-    wr
+    q dq er e er
+    q h e e
+    dh qr
+    q h e e
+    dh qr
     dq e h
     wr
     w
     w
     )
    (list
-    fs5 g5 d5
-    c5 d5 a4
+    e5 fs5 d5
+    fs5 g5 d5 b4
+    d5
+    c5 d5 a4 g4
+    a4
     e4 g4 fs4
-    c4 a3
+    c4
+    a3
     )))
 
 (define clen 10)
-(define melc1 (append melody-a (take melody-a 15) melody-coda))
+
+(define melc1 (append melody-a (take melody-a 11) melody-coda))
+
 (generate-midi
  'c1
  (list
