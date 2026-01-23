@@ -57,7 +57,7 @@
   (meta delta #x03 (ascii-bytes s)))
 
 ;; ---------- musical constants ----------
-(define PPQ 480)              ; ticks per quarter note
+(define PPQ 960)              ; ticks per quarter note
 (define q PPQ)
 (define e (/ PPQ 2))          ; eighth note = 240 ticks
 (define bars 4)

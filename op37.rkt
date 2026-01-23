@@ -36,9 +36,9 @@
 
 (define melody-a
   (list
-   (cons qr 0) (cons q b4) (cons q a4) (cons q g4) ; bar 1
+   (cons qr 0) (cons q b4) (cons dq a4) (cons e g4) ; bar 1
    (cons dq d5) (cons e b4) (cons h a4) ; bar 2
-   (cons qr 0) (cons q b4) (cons q a4) (cons q b4) ; bar 3
+   (cons qr 0) (cons q b4) (cons dq a4) (cons e b4) ; bar 3
    (cons dq fs5) (cons e g5) (cons q fs5) (cons q d5) ; bar 4
 
    (cons qr 0) (cons q d5) (cons q b4) (cons q g4) ; bar 5
@@ -146,8 +146,9 @@
 (set! meter '(4 4))
 (set! bar (* 4 q))
 
-(define section-c-harm-rhy (repeat 2 e er dh ))
+(define section-c-harm-rhy (repeat 2 q (+ h e) er))
 (define section-c-decor (repeat 1 e e dw qr))
+(define section-c-bass-rhy (repeat 2 q (+ h e) e))
 
 (define chords-c
 
@@ -158,11 +159,9 @@
    (mk-chord dbar g3 b3 d4 a4)
    (mk-chord bar fs3 a3 d4 g4)
    (mk-chord bar fs3 a3 d4 a4)
-   (mk-chord bar e3 g3 b3 b4)        ;; dissonance c/b with melody -8vb; sounds OK
-   (mk-chord bar e3 g3 b3 e4)        ;; dissonance c/b with melody -8vb; sounds OK
+   (mk-chord bar e3 g3 b3 b4)
+   (mk-chord bar e3 g3 b3 e4)
 
-   ;; (mk-chord bar a3 a3 c4)
-   ;; (mk-chord bar c4 c4 e4)
    (mk-chord bar a3 c4 e4 a4)
    (mk-chord bar c4 e4 g4 e4)
 
@@ -171,7 +170,7 @@
    (mk-chord bar fs3 a3 d4 g4)
    (mk-chord bar fs3 a3 d4 a4)
 
-   (mk-chord bar e3 a3 b3 fs4) ;; Es2
+   (mk-chord bar e3 a3 b3 fs4) ;; Es2-add4
    (mk-chord bar e3 g3 b3 e4)
 
    (mk-chord dbar a3 c4 e4 g4) ;; Am7
@@ -180,6 +179,11 @@
    (mk-chord bar g3 a3 d4 a4)  ;; Gs2
    (mk-chord bar g3 b3 d4 a4)  ;; G
    ))
+
+(define counter-melody
+  (zip-notes
+   (list wr hr dq e h)
+   (list d5 b4 a4)))
 
 (define melody-coda
   (zip-notes
@@ -206,10 +210,15 @@
  'c1
  (list
 
-  (mk-track bassoon-1 (project-chords (repeat clen section-c-harm-rhy) chords-c first))
+  (mk-track bassoon-1 (project-chords (repeat clen section-c-bass-rhy) chords-c first))
 
-  (mk-track horn-2 (project-chords (repeat clen section-c-decor) chords-c fourth))
+  (mk-track horn-1 (project-notes melc1 vb8))
+  (mk-track horn-2 (project-chords (repeat clen section-c-harm-rhy) chords-c fourth))
+  (mk-track trumpet-1 (project-notes (append counter-melody)))
   (mk-track trombone-1 (project-chords (repeat clen section-c-harm-rhy) chords-c third ))
+  (mk-track trombone-2 (project-chords (repeat clen section-c-bass-rhy) chords-c first))
+
+  (mk-track timpani (project-chords (repeat clen section-c-bass-rhy) chords-c first vb8))
 
   ;; Melody onto V1/V2 in octaves
   (mk-track violins-1 (project-notes melc1 va8))
@@ -218,8 +227,8 @@
   ;; (mk-track "Melodyc" (project-notes melc va8))
 
   (mk-track violas (project-chords (repeat clen section-c-harm-rhy) chords-c fourth))
-  (mk-track cellos (project-chords (repeat clen section-c-harm-rhy) chords-c first ))
-  (mk-track double-bass (project-chords (repeat clen section-c-harm-rhy) chords-c first vb8))
+  (mk-track cellos (project-notes melc1 vb8))
+  (mk-track double-bass (project-chords (repeat clen section-c-bass-rhy) chords-c first vb8))
 
   ))
 

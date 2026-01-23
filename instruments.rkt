@@ -29,6 +29,8 @@
 (define trombone-2 "Trombone 2")
 (define trombone-3 "Trombone 3")
 
+(define timpani "Timpani")
+
 (define violins-1 "Violins 1" )
 (define violins-2 "Violins 2" )
 (define violas "Violas")

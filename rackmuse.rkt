@@ -5,6 +5,8 @@
  h hr dh dhr
  q qr dq dqr
  e er de der
+ s sr ds dsr
+
 
  repeat rest dot
 
@@ -38,7 +40,7 @@
  notes-of
  )
 
-(define PPQ 480)
+(define PPQ 960)
 
 (define (rest d) (- 0 d))
 (define (dot d) (* 3 (/ d 2)))
@@ -62,6 +64,11 @@
 (define er (rest e))
 (define de (dot e))
 (define der (rest de))
+
+(define s (/ q 4))
+(define sr (rest s))
+(define ds (dot s))
+(define dsr (rest ds))
 
 (define (repeat n . ls) (flatten (make-list n (list ls))))
 
