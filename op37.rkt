@@ -146,7 +146,7 @@
 (set! meter '(4 4))
 (set! bar (* 4 q))
 
-(define section-c-harm-rhy (repeat 1 h h h dq e))
+(define section-c-harm-rhy (repeat 2 dq e dq e));;h h dq e))
 (define section-c-decor (repeat 1 e e dw qr))
 ;; (define section-c-bass-rhy (repeat 2 q (+ h e) e))
 (define section-c-bass-rhy section-c-harm-rhy)
@@ -168,10 +168,9 @@
 
    ;; repeat, but different cadence from Em
    (mk-chord dbar g3 b3 d4 a4)
-   (mk-chord bar fs3 a3 d4 g4)
-   (mk-chord bar d3 fs3 a3 a4)
+   (mk-chord dbar fs3 a3 d4 a4)
 
-   (mk-chord bar e3 a3 b3 fs4) ;; Es2-add4
+   (mk-chord bar e3 a3 b3 g4) ;; Es2-add4
    (mk-chord bar e3 g3 b3 e4)
 
    (mk-chord dbar a3 c4 e4 g4) ;; Am7

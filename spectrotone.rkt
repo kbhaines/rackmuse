@@ -100,6 +100,12 @@
           (list 85 95 'green 'yellow)
           (list 96 103 'yellow 'yellow)))
 
+   (list "celeste"
+         (list
+          (list 60 72 'blue 'green)
+          (list 73 84 'green 'yellow)
+          (list 85 96 'yellow 'white)))
+
    (list "violin"
          (list
           (list 0 54 'black 'black)
