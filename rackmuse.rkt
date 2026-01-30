@@ -20,6 +20,10 @@
  pitch-scale-degrees
  zip-notes
 
+ timeline-length timeline-index timeline-ref
+ durations->timeline
+ harmony->voice
+
  mk-track track-name track-spans
 
  join
@@ -167,6 +171,45 @@
                   (selector
                    (chord-notes (list-ref chords (index-spans chord-spans start))))))
     (list start (span-length p) data)))
+
+(define chords->notes project-chords)
+
+(define (durations->timeline dur)
+  (for/fold
+   ([td 0]
+    [result '()] #:result (reverse result))
+   ([d dur])
+    (values (+ td (abs d)) (cons (cons td d) result))))
+
+(define (timeline-ref tl t [infinite? #f])
+  (define tgt (if infinite? (modulo t (timeline-length tl)) t))
+  (define (found? p) (<= (car p) tgt (+ (car p) (- (abs (cdr p)) 1))))
+  (findf found? tl))
+
+(define (timeline-index tl t [infinite? #f])
+  (define tgt (if infinite? (modulo t (timeline-length tl)) t))
+  (define (found? p) (<= (car p) tgt (+ (car p) (- (abs (cdr p)) 1))))
+  (index-where tl found?))
+
+(define (timeline-length tl)
+  (define p (last tl))
+  (+ (car p) (abs (cdr p))))
+
+(define (harmony->voice rhy chords selector [transpose identity])
+  (define rhy-timeline (durations->timeline rhy))
+  (define chds-timeline (durations->timeline (durations-of chords)))
+
+  (define select
+    (if (eq? 1 (procedure-arity selector))
+        (lambda(_time _dur v)(selector v))
+        selector))
+
+  (for/list ([r rhy-timeline])
+    (define time (car r))
+    (define dur (cdr r))
+    (if (> dur 0)
+        (cons dur (select time dur (chord-notes (list-ref chords (timeline-index chds-timeline time #t)))))
+        (cons dur 0))))
 
 (define (project-notes notes [transpose identity])
 
