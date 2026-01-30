@@ -260,7 +260,11 @@
         (values (cdr ps) (cons (mk-note (car ps) d) ns))
         (values ps (cons (mk-note 0 d) ns)))))
 
-(define (transpose notes f)
+(define (transpose f notes)
+
+  ;; applies the given transposition function to all the notes, returning
+  ;; a new list of notes
+
   (for/list ([n notes])
     (define dur (car n))
     (define pitch (cdr n))

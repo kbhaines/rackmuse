@@ -221,22 +221,20 @@
 
   (mk-track bassoon-1 (harmony->voice (repeat clen section-c-bass-rhy) chords-c first))
 
-  (mk-track horn-1 (transpose melc1 vb8))
+  (mk-track horn-1 (transpose vb8 melc1))
   (mk-track horn-2 (harmony->voice (repeat clen section-c-harm-rhy) chords-c fourth))
-  (mk-track trumpet-1  counter-melody)
+  (mk-track trumpet-1 counter-melody)
   (mk-track trombone-1 (harmony->voice (repeat clen section-c-harm-rhy) chords-c third ))
   (mk-track trombone-2 (harmony->voice (repeat clen section-c-bass-rhy) chords-c first))
 
-  (mk-track timpani (harmony->voice (repeat clen section-c-bass-rhy) chords-c first vb8))
+  (mk-track timpani (transpose vb8 (harmony->voice (repeat clen section-c-bass-rhy) chords-c first)))
 
   ;; Melody onto V1/V2 in octaves
-  (mk-track violins-1 (transpose melc1 va8))
+  (mk-track violins-1 (transpose va8 melc1))
   (mk-track violins-2 melc1)
 
-  ;; (mk-track "Melodyc" (transpose melc va8))
-
   (mk-track violas (harmony->voice (repeat clen section-c-harm-rhy) chords-c fourth))
-  (mk-track cellos (transpose melc1 vb8))
+  (mk-track cellos (transpose vb8 melc1))
   (mk-track double-bass (harmony->voice (repeat clen section-c-bass-rhy) chords-c first vb8))
 
   ))
