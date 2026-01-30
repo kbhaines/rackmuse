@@ -7,18 +7,17 @@
  e er de der
  s sr ds dsr
 
-
  repeat rest dot
 
  mk-chord chord-notes chord-duration inv
  major minor
  mk-note note-note note-duration
 
- project-chords
- project-notes
+ ;; project-chords project-notes
  arpeg
  pitch-scale-degrees
  zip-notes
+ transpose
 
  timeline-length timeline-index timeline-ref
  durations->timeline
@@ -156,18 +155,21 @@
   (define (in? s v) (and (< v (span-end s)) (>= v (span-start s))))
   (index-of spans pp in?))
 
-(define (project-chords rhythm chords selector [transpose identity])
+(define (project-chords rhythm chords selector [xform identity])
 
+  ;; DEPRECATED - use harmony->voice
   ;; given the list of rhythm lengths a note of the chords is 'projected' onto each element of the
   ;; rhythm, at the appropriate time position. When the rhythm is negative, it defines a rest in the
   ;; progression. The list of chords can be shorter than the rhythm; index-spans is used such that the
   ;; chord sequence repeats indefinitely.
+  ;;
+  ;;
 
   (define rhythm-spans (gen-spans rhythm))
   (define chord-spans (gen-spans chords chord-duration))
   (for/list ([p rhythm-spans])
     (define start (span-start p))
-    (define data (transpose
+    (define data (xform
                   (selector
                    (chord-notes (list-ref chords (index-spans chord-spans start))))))
     (list start (span-length p) data)))
@@ -195,7 +197,7 @@
   (define p (last tl))
   (+ (car p) (abs (cdr p))))
 
-(define (harmony->voice rhy chords selector [transpose identity])
+(define (harmony->voice rhy chords selector [xform identity])
   (define rhy-timeline (durations->timeline rhy))
   (define chds-timeline (durations->timeline (durations-of chords)))
 
@@ -208,10 +210,13 @@
     (define time (car r))
     (define dur (cdr r))
     (if (> dur 0)
-        (cons dur (select time dur (chord-notes (list-ref chords (timeline-index chds-timeline time #t)))))
+        (cons dur (xform
+                   (select time dur
+                           (chord-notes
+                            (list-ref chords (timeline-index chds-timeline time #t))))))
         (cons dur 0))))
 
-(define (project-notes notes [transpose identity])
+(define (notes->spans notes [xform identity])
 
   ;; converts a list of notes (which may include rests) into absolute spans, ready for midi rendering.
 
@@ -221,15 +226,15 @@
     (define data (cdr (span-data p)))
     (list start
           (span-length p)
-          (if (number? data) (transpose data) data))))
+          (if (number? data) (xform data) data))))
 
 (define (arpeg pitch-indices)
 
-  ;; Creates a selector function to pass to project-chords. The selector cycles through the given
-  ;; pitch-indices every time project-chords 'needs' a note.
+  ;; Creates a selector function to pass to harmony->voice The selector cycles through the given
+  ;; pitch-indices every time harmony->voice 'needs' a note.
   ;;
   ;; Example:
-  ;;    (project-chords (list q q qr qr q q) chords-c (arpeg '(0 2 3 0)))
+  ;;    (harmony->voice (list q q qr qr q q) chords-c (arpeg '(0 2 3 0)))
 
   (define igen
     (infinite-generator
@@ -255,6 +260,12 @@
         (values (cdr ps) (cons (mk-note (car ps) d) ns))
         (values ps (cons (mk-note 0 d) ns)))))
 
+(define (transpose notes f)
+  (for/list ([n notes])
+    (define dur (car n))
+    (define pitch (cdr n))
+    (cons dur (f pitch))))
+
 (define major-scale '(0 2 4 5 7 9 11))
 (define join (compose flatten append))
 
@@ -265,7 +276,7 @@
 (define (vb16 n) (- n 24))
 (define (vb24 n) (- n 36))
 
-(define (mk-track name spans) (cons name spans))
+(define (mk-track name notes) (cons name (notes->spans notes)))
 (define track-name car)
 (define track-spans cadr)
 

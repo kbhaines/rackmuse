@@ -21,7 +21,6 @@
 (define (generate-midi part-id tracks)
   (make-midi-track-file meter bpm key-sig (format filename-fmt part-id) tracks))
 
-
 (define (dur d . args) (map (lambda(x)(cons d x)) args))
 
 (define chords-a
@@ -53,21 +52,21 @@
 (define tacet8 (cons (* 8 barr) 0))
 (define tacet16 (cons (* 16 barr) 0))
 
-(generate-midi
- 'a
- (list
+#;(generate-midi
+   'a
+   (list
 
-  (mk-track oboe-1 (project-notes melody-a))
-  (mk-track cor-anglais (project-notes (cons tacet8 melody-a)))
+    (mk-track oboe-1 (project-notes melody-a))
+    (mk-track cor-anglais (project-notes (cons tacet8 melody-a)))
 
-  (mk-track horn-1 (project-notes (cons tacet8 melody-a) vb8))
-  (mk-track trombone-1 (project-chords (durations-of (cons tacet8 chords-a)) chords-a third vb8 ))
+    (mk-track horn-1 (project-notes (cons tacet8 melody-a) vb8))
+    (mk-track trombone-1 (project-chords (durations-of (cons tacet8 chords-a)) chords-a third vb8 ))
 
-  (mk-track violins-2 (project-chords (repeat 2 inner-pulse-a) chords-a third))
-  (mk-track violas (project-chords (repeat 2 (durations-of chords-a)) chords-a second ))
-  (mk-track cellos (project-chords (repeat 2 (durations-of chords-a)) chords-a first vb8))
+    (mk-track violins-2 (project-chords (repeat 2 inner-pulse-a) chords-a third))
+    (mk-track violas (project-chords (repeat 2 (durations-of chords-a)) chords-a second ))
+    (mk-track cellos (project-chords (repeat 2 (durations-of chords-a)) chords-a first vb8))
 
-  ))
+    ))
 
 ;; Section B
 
@@ -117,29 +116,29 @@
 
 (define viola-b-rhy (repeat 4 q q q q h  ))
 
-(generate-midi
- 'b
- (list
+#;(generate-midi
+   'b
+   (list
 
-  (mk-track clarinet-1 (project-notes  melody-b1))
-  (mk-track bassoon-1 (project-chords (durations-of chords-b) chords-b first va8 ))
-  (mk-track violas (project-chords viola-b-rhy chords-b second va8 ))
-  (mk-track cellos (project-chords (durations-of chords-b) chords-b first va8 ))
+    (mk-track clarinet-1 (project-notes  melody-b1))
+    (mk-track bassoon-1 (project-chords (durations-of chords-b) chords-b first va8 ))
+    (mk-track violas (project-chords viola-b-rhy chords-b second va8 ))
+    (mk-track cellos (project-chords (durations-of chords-b) chords-b first va8 ))
 
-  ))
+    ))
 
-(generate-midi
- 'b2
- (list
+#;(generate-midi
+   'b2
+   (list
 
-  (mk-track bassoon-1 (project-chords (durations-of chords-b) chords-b first va8 ))
-  (mk-track violins-1 (project-chords (durations-of chords-b) chords-b third va16 ))
-  (mk-track violins-2 (project-chords (durations-of chords-b) chords-b second va16 ))
-  (mk-track violas (project-notes melody-b1 vb8))
-  (mk-track cellos (project-chords (durations-of chords-b) chords-b first va8 ))
-  (mk-track double-bass (project-chords viola-b-rhy chords-b first))
+    (mk-track bassoon-1 (project-chords (durations-of chords-b) chords-b first va8 ))
+    (mk-track violins-1 (project-chords (durations-of chords-b) chords-b third va16 ))
+    (mk-track violins-2 (project-chords (durations-of chords-b) chords-b second va16 ))
+    (mk-track violas (project-notes melody-b1 vb8))
+    (mk-track cellos (project-chords (durations-of chords-b) chords-b first va8 ))
+    (mk-track double-bass (project-chords viola-b-rhy chords-b first))
 
-  ))
+    ))
 
 ;; Section C
 
@@ -220,25 +219,25 @@
  'c1
  (list
 
-  (mk-track bassoon-1 (project-chords (repeat clen section-c-bass-rhy) chords-c first))
+  (mk-track bassoon-1 (harmony->voice (repeat clen section-c-bass-rhy) chords-c first))
 
-  (mk-track horn-1 (project-notes melc1 vb8))
-  (mk-track horn-2 (project-chords (repeat clen section-c-harm-rhy) chords-c fourth))
-  (mk-track trumpet-1 (project-notes (append counter-melody)))
-  (mk-track trombone-1 (project-chords (repeat clen section-c-harm-rhy) chords-c third ))
-  (mk-track trombone-2 (project-chords (repeat clen section-c-bass-rhy) chords-c first))
+  (mk-track horn-1 (transpose melc1 vb8))
+  (mk-track horn-2 (harmony->voice (repeat clen section-c-harm-rhy) chords-c fourth))
+  (mk-track trumpet-1  counter-melody)
+  (mk-track trombone-1 (harmony->voice (repeat clen section-c-harm-rhy) chords-c third ))
+  (mk-track trombone-2 (harmony->voice (repeat clen section-c-bass-rhy) chords-c first))
 
-  (mk-track timpani (project-chords (repeat clen section-c-bass-rhy) chords-c first vb8))
+  (mk-track timpani (harmony->voice (repeat clen section-c-bass-rhy) chords-c first vb8))
 
   ;; Melody onto V1/V2 in octaves
-  (mk-track violins-1 (project-notes melc1 va8))
-  (mk-track violins-2 (project-notes melc1 ))
+  (mk-track violins-1 (transpose melc1 va8))
+  (mk-track violins-2 melc1)
 
-  ;; (mk-track "Melodyc" (project-notes melc va8))
+  ;; (mk-track "Melodyc" (transpose melc va8))
 
-  (mk-track violas (project-chords (repeat clen section-c-harm-rhy) chords-c fourth))
-  (mk-track cellos (project-notes melc1 vb8))
-  (mk-track double-bass (project-chords (repeat clen section-c-bass-rhy) chords-c first vb8))
+  (mk-track violas (harmony->voice (repeat clen section-c-harm-rhy) chords-c fourth))
+  (mk-track cellos (transpose melc1 vb8))
+  (mk-track double-bass (harmony->voice (repeat clen section-c-bass-rhy) chords-c first vb8))
 
   ))
 
