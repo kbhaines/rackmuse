@@ -16,6 +16,7 @@
 
  project-chords
  project-notes
+ arpeg
  pitch-scale-degrees
  zip-notes
 
@@ -39,6 +40,8 @@
  durations-of
  notes-of
  )
+
+(require racket/generator)
 
 (define PPQ 960)
 
@@ -177,12 +180,30 @@
           (span-length p)
           (if (number? data) (transpose data) data))))
 
+(define (arpeg pitch-indices)
+
+  ;; Creates a selector function to pass to project-chords. The selector cycles through the given
+  ;; pitch-indices every time project-chords 'needs' a note.
+  ;;
+  ;; Example:
+  ;;    (project-chords (list q q qr qr q q) chords-c (arpeg '(0 2 3 0)))
+
+  (define igen
+    (infinite-generator
+     (for ([p pitch-indices])
+       (yield p))))
+  (lambda(lst)(list-ref lst (igen))))
+
 (define (pitch-scale-degrees scale root pitches)
   (for/list ([p pitches])
     (define pp (modulo (- p root) 12))
     (index-of scale pp)))
 
 (define (zip-notes durations pitches)
+
+  ;; combines the list of durations and pitches together, filtering out any rests, and creates a list
+  ;; of (duration . pitch) pairs
+
   (for/fold
    ([ps pitches]
     [ns '()] #:result (reverse ns))
