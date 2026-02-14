@@ -34,7 +34,7 @@
    (mk-chord bar c2 f2 a2)
 
    (mk-chord bar bf1 d2 f2)
-   (mk-chord bar c2 ef2 g2)
+   (mk-chord bar ef2 g2 bf2)
    (mk-chord bar f2 a2 c3)
    (mk-chord dbar bf2 d3 f3)
    ))
@@ -62,9 +62,9 @@
 
    f5 a5 bf5 g5 f5 d5
 
-   c5 ef5
+   ef5 f5
 
-   f5 a5
+   g5 a5
 
    d5
    ))
