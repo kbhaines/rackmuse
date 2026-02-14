@@ -21,57 +21,93 @@
 (define (generate-midi part-id tracks)
   (make-midi-track-file meter bpm key-sig (format filename-fmt part-id) tracks))
 
-(define chords-b
+(define chords-c
   (list
-   (mk-chord bar g3 g3 bf3)
-   (mk-chord bar f3 g3 c4)
-   (mk-chord bar g3 bf3 d4)
-   (mk-chord bar ef3 bf3 ef4)
+   (mk-chord bar g2 bf2 d3)
+   (mk-chord bar ef2 g2 bf2)
+   (mk-chord bar f2 bf2 d3)
+   (mk-chord bar f2 a2 c3)
 
-   (mk-chord bar g3 bf3 d4)
-   (mk-chord bar f3 c4 c4)
-   (mk-chord bar g3 d4 d4)
-   (mk-chord bar ef3 ef4 ef4)
+   (mk-chord bar g2 bf2 d3)
+   (mk-chord bar ef2 g2 bf2)
+   (mk-chord bar bf1 d2 f2)
+   (mk-chord bar c2 f2 a2)
+
+   (mk-chord bar bf1 d2 f2)
+   (mk-chord bar c2 ef2 g2)
+   (mk-chord bar f2 a2 c3)
+   (mk-chord dbar bf2 d3 f3)
    ))
 
 (define pulse-b-arp (arpeg '(2 2 0 1 0)))
 (define pulse-b (repeat 2 (list e e q e e)))
 
-(define rhythm-a1 (repeat 2 h))
 (define rhythm-a2 (repeat 4 de sr))
-(define rhythm-b1 (repeat 4 sr s s s))
-(define pitches-b1 (join (repeat 12 d4) (repeat 12 ef4) (repeat 12 f4) (repeat 12 g4)))
-(define pitches-b2 (join  (repeat 12 g4) (repeat 12 a4) (repeat 12 bf4) (repeat 12 c5)))
-;; (define pitches-b2 (join (repeat 8 f4) (repeat 8 g4) (repeat 8 a4) (repeat 8 bf4)))
+(define rhythm-c2 (repeat 4 s s e))
 
-(define melody-a1-pitches
+(define melody-c1-pitches
   (list
-   d5 ef5 f5 ef5
-   c5 f5
-   d5 ef5 g5 f5
-   a5 bf5))
+   bf4 d5   ef5 d5 c5 bf4
+   g4 bf4 c5 d5
 
-(define melody-a1-durs
+   c5 f5   g5 f5 ef5 d5
+   c5
+
+   d5 f5   g5 f5 ef5 d5
+   bf4 c5
+
+   f5 a5 bf5 d5
+
+   c5 ef5
+
+   f5 a5 bf5 g5 f5 d5
+
+   c5 ef5
+
+   f5 a5
+
+   d5
+   ))
+
+(define melody-c1-durs
   (list
-   q q q er e
-   q h qr
-   q q q er e
-   q h qr))
+   q e er e e e e
+   q q q e er
+
+   q q e e e e
+   h hr
+
+   q q e e e e
+   h h
+
+   q e dq q
+
+   h h
+
+   q e q e e e
+
+   h h
+   h h
+   w
+   ))
 
 (define tacet4 (tacet bar 4))
 
+(define section-c-rhy (append (repeat 11 rhythm-a2) (list dbar)))
 (define section-c-blueprint
   (hash
-   'a:melody (transpose vb8(cons tacet4 (zip-notes melody-a1-durs melody-a1-pitches)))
-   'a+1:melody (cons tacet4 (zip-notes melody-a1-durs melody-a1-pitches))
-   'sub-mel:support  (harmony->voice
-                      (repeat 2 dh qr dh qr dh qr q h qr)
-                      (zip-notes melody-a1-durs melody-a1-pitches)
-                      #f vb8)
-   'c1:colour (harmony->voice (repeat 8 rhythm-a2) chords-b second va8)
-   'e1:engine (harmony->voice (repeat 8 rhythm-a2) chords-b third)
-   'e2:engine (transpose va8 (zip-notes (repeat 8 rhythm-b1) (join pitches-b1 pitches-b2)))
-   'b1:bass (harmony->voice (repeat 32 (list s sr s sr)) chords-b first)
+   'a:melody (zip-notes melody-c1-durs melody-c1-pitches)
+   ;; 'a+1:melody (cons tacet4 (zip-notes melody-a1-durs melody-a1-pitches))
+   ;; 'sub-mel:support  (harmony->voice
+   ;;                    (repeat 2 dh qr dh qr dh qr q h qr)
+   ;;                    (zip-notes melody-a1-durs melody-a1-pitches)
+   ;;                    #f vb8)
+   ;; 'c1:colour (harmony->voice (repeat 8 rhythm-a2) chords-c second va8)
+   'e1:engine (harmony->voice section-c-rhy chords-c third)
+   'e2:engine (harmony->voice (repeat 12 rhythm-c2) chords-c second va8)
+   'e3:engine (harmony->voice (repeat 12 (repeat 4 e er)) chords-c first va16)
+   ;; 'e2:engine (transpose va8 (zip-notes (repeat 8 rhythm-b1) (join pitches-b1 pitches-b2)))
+   'b1:bass (harmony->voice section-c-rhy chords-c first)
    ))
 
 (define section-c-orch
@@ -93,9 +129,9 @@
    (assign 'sub-mel:support "Double Bass" #f)
    ))
 
-(generate-midi 'bp-b (blueprint->midi section-c-blueprint))
+(generate-midi 'c (blueprint->midi section-c-blueprint))
 
-(generate-midi 'b (blueprint->orchestrated-midi section-c-blueprint section-c-orch))
+;; (generate-midi 'b (blueprint->orchestrated-midi section-c-blueprint section-c-orch))
 
 
 
