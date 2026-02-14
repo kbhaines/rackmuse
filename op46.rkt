@@ -30,6 +30,9 @@
 
    (mk-chord bar g2 bf2 d3)
    (mk-chord bar ef2 g2 bf2)
+   (mk-chord bar f2 bf2 d3)
+   (mk-chord bar f2 a2 c3)
+
    (mk-chord bar bf1 d2 f2)
    (mk-chord bar c2 f2 a2)
 
@@ -56,6 +59,9 @@
    d5 f5   g5 f5 ef5 d5
    bf4 c5
 
+   d5 f5   g5 f5 ef5 d5
+   d5 ef5
+
    f5 a5 bf5 d5
 
    c5 ef5
@@ -80,8 +86,10 @@
    q q e e e e
    h h
 
-   q e dq q
+   q q e e e e
+   h h
 
+   q e dq q
    h h
 
    q e q e e e
@@ -93,7 +101,7 @@
 
 (define tacet4 (tacet bar 4))
 
-(define section-c-rhy (append (repeat 11 rhythm-a2) (list dbar)))
+(define section-c-rhy (append (repeat 13 rhythm-a2) (list dbar)))
 (define section-c-blueprint
   (hash
    'a:melody (zip-notes melody-c1-durs melody-c1-pitches)
@@ -104,8 +112,8 @@
    ;;                    #f vb8)
    ;; 'c1:colour (harmony->voice (repeat 8 rhythm-a2) chords-c second va8)
    'e1:engine (harmony->voice section-c-rhy chords-c third)
-   'e2:engine (harmony->voice (repeat 12 rhythm-c2) chords-c second va8)
-   'e3:engine (harmony->voice (repeat 12 (repeat 4 e er)) chords-c first va16)
+   'e2:engine (harmony->voice (repeat 14 rhythm-c2) chords-c second va8)
+   'e3:engine (harmony->voice (repeat 14 (repeat 4 e er)) chords-c first va16)
    ;; 'e2:engine (transpose va8 (zip-notes (repeat 8 rhythm-b1) (join pitches-b1 pitches-b2)))
    'b1:bass (harmony->voice section-c-rhy chords-c first)
    ))
