@@ -16,7 +16,8 @@ for midifile in $*;do
   outfile=$midifile.svg
   racket -l errortrace -t $rktfile
   #midi_inspect $midifile $outfile 
-  #midi_inspect $midifile $outfile --svg-overtones 1 --svg-overtones-bloom
-  midi_inspect $midifile $outfile --svg-spectrotone # --svg-bar-range 9:20
+  # midi_inspect $midifile $outfile --svg-overtones 1 --svg-overtones-bloom --track-function
+  midi_inspect $midifile $outfile --svg-spectrotone --svg-overtones 1 --svg-overtones-bloom --track-function
+  #midi_inspect $midifile $outfile --svg-spectrotone # --svg-bar-range 9:20
   #open -a safari $outfile
 done

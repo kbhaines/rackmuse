@@ -214,7 +214,7 @@
     (define suffix (if (> (length parts) 1) (string-downcase (last parts)) ""))
     (define func
       (cond
-        [(member suffix '("melody" "engine" "support" "bass")) (string->symbol suffix)]
+        [(member suffix '("melody" "colour" "engine" "support" "bass")) (string->symbol suffix)]
         [else #f]))
     (values (if keep-suffix? n base) func))
   (for ([evts tracks] [ti (in-naturals 0)])
@@ -351,6 +351,7 @@
   (define melody-color "#d06b6b")
   (define engine-color "#5a8ad0")
   (define support-color "#6bb68a")
+  (define colour-color "#c0b000")
   (define bass-color "#6b5aa6")
   (define shade-step 0.04)
   (define shade-floor 0.8)
@@ -390,6 +391,7 @@
       [(eq? func 'melody) 'melody]
       [(eq? func 'engine) 'engine]
       [(eq? func 'support) 'support]
+      [(eq? func 'colour) 'colour]
       [(eq? func 'bass) 'bass]
       [(or (string-contains? name "trombone")
            (string-contains? name "trumpet")
@@ -414,6 +416,7 @@
       [(melody) melody-color]
       [(engine) engine-color]
       [(support) support-color]
+      [(colour) colour-color]
       [(bass) bass-color]
       [(brass) brass-color]
       [(strings) strings-color]
@@ -591,6 +594,7 @@
     (for/list ([o offsets])
       (+ base o)))
 
+  (define max-ot-note 89)
   (define (note-rects n max-p y0)
     (define base (note-pitch n))
     (define base-h (- note-h 1))
@@ -605,7 +609,7 @@
          rects
          (for/list ([p (overtone-pitches base)]
                     [i (in-naturals 0)]
-                    #:when (and (< i overtone-count) (<= p 77)))
+                    #:when (and (< i overtone-count) (<= p max-ot-note)))
            (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
            (define overtone-h
              (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))
@@ -650,7 +654,7 @@
                     (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
                       (for ([p (overtone-pitches base)]
                             [i (in-naturals 0)]
-                            #:when (and (< i overtone-count) (<= p 77)))
+                            #:when (and (< i overtone-count) (<= p max-ot-note)))
                         (define intensity (exp (* -0.6 i)))
                         (add-bloom p intensity ns ne (heat-color intensity))))))))
           (string-join (reverse items) "\n"))
@@ -674,7 +678,7 @@
         (when (and (number? overtone-count) (>= overtone-count 1) (<= base 72))
           (for ([p (overtone-pitches base)]
                 [i (in-naturals 0)]
-                #:when (and (< i overtone-count) (<= p 77)))
+                #:when (and (< i overtone-count) (<= p max-ot-note)))
             (define overtone-label (format "~a (overtone ~a)" label (add1 i)))
             (define overtone-h
               (max 1 (inexact->exact (floor (* base-h (- 0.6 (* 0.1 i)))))))

@@ -139,7 +139,7 @@
       (define trk-name (car trkn))
       (define trk (cdr trkn))
       (values
-       (bytes-append acc (make-note-track chan trk trk-name))
+       (bytes-append acc (make-note-track 0 trk trk-name))
        (add1 chan))))
 
   ;; (displayln (bytes-length file-bytes))

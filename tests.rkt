@@ -29,3 +29,8 @@
 (check-equal? (harmony->voice (list q qr q qr e e q q qr h h q) chord-seq sel1)
               '((960 . c) (-960 . 0) (960 . c) (-960 . 0) (480 . f) (480 . f) (960 . f) (960 . f2) (-960 . 0) (1920 . em) (1920 . em) (960 . em2)))
 
+(check-equal? (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons q 'g4) (cons q 'g5)) #f)
+              '((1920 . c4) (1920 . g4)))
+
+(check-equal? (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons qr 0) (cons q 'g5)) #f)
+              '((1920 . c4) (1920 . g4)))

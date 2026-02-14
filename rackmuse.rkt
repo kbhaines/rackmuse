@@ -8,6 +8,7 @@
  s sr ds dsr
 
  repeat rest dot
+ tacet
 
  mk-chord chord-notes chord-duration inv
  major minor
@@ -42,6 +43,9 @@
  major-scale
  durations-of
  notes-of
+
+ blueprint->midi blueprint->orchestrated-midi
+ (struct-out assign)
  )
 
 (require racket/generator)
@@ -78,6 +82,8 @@
 
 (define (repeat n . ls) (flatten (make-list n (list ls))))
 
+(define (tacet d n) (cons (* (- 0 d) n) 0))
+
 (define-values
   (c0 cs0 df0 d0 ds0 ef0 e0 f0 fs0 gf0 g0 gs0 af0 a0 as0 bf0 b0
       c1 cs1 df1 d1 ds1 ef1 e1 f1 fs1 gf1 g1 gs1 af1 a1 as1 bf1 b1
@@ -98,8 +104,13 @@
           96 97 97 98 99 99 100 101 102 102 103 104 104 105 106 106 107
           108))
 
-;; The convention is that duration is always first, and the rest of the entity data is the tail or cdr
-;; of the list
+;; NOTE: The convention for the user facing data (e.g. chords, notes) is that duration is always
+;; first, and the rest of the entity data is the tail or cdr of the list. This will hold true most of
+;; the time for user-facing data; but sometimes, for convenience, the *internals* of the module are
+;; allowed to violate it where it makes sense.
+
+(define (durations-of is) (map car is))
+(define (notes-of is) (map cdr is))
 
 (define (mk-chord duration . notes) (list duration notes))
 (define chord-duration car)
@@ -202,17 +213,19 @@
   (define chds-timeline (durations->timeline (durations-of chords)))
 
   (define select
-    (if (eq? 1 (procedure-arity selector))
-        (lambda(_time _dur v)(selector v))
-        selector))
+    (cond
+      [(not selector) (lambda(_time _dur v) v)]
+      [(eq? 1 (procedure-arity selector)) (lambda(_time _dur v)(selector v))]
+      [else selector]))
 
+  (define get-notes (if (not selector) cdr chord-notes))
   (for/list ([r rhy-timeline])
     (define time (car r))
     (define dur (cdr r))
     (if (> dur 0)
         (cons dur (xform
                    (select time dur
-                           (chord-notes
+                           (get-notes
                             (list-ref chords (timeline-index chds-timeline time #t))))))
         (cons dur 0))))
 
@@ -240,7 +253,14 @@
     (infinite-generator
      (for ([p pitch-indices])
        (yield p))))
-  (lambda(lst)(list-ref lst (igen))))
+  (lambda(lst)
+    (define next (igen))
+    (cond
+      [(pair? next)
+       (define idx (car next))
+       (define other (cdr next))
+       (other (list-ref lst idx))]
+      [else (list-ref lst next)])))
 
 (define (pitch-scale-degrees scale root pitches)
   (for/list ([p pitches])
@@ -249,8 +269,9 @@
 
 (define (zip-notes durations pitches)
 
-  ;; combines the list of durations and pitches together, filtering out any rests, and creates a list
-  ;; of (duration . pitch) pairs
+  ;; combines the list of durations and pitches together, creating a list of (duration . pitch) pairs.
+  ;; Rests are not assigned to pitches (obviously), but are left in correct position in the resulting
+  ;; list.
 
   (for/fold
    ([ps pitches]
@@ -284,5 +305,15 @@
 (define track-name car)
 (define track-spans cadr)
 
-(define (durations-of is) (map car is))
-(define (notes-of is) (map cdr is))
+(struct assign (src dst xform) #:transparent)
+
+(define (blueprint->midi bluep)
+  (hash-map bluep (lambda (tid notes) (mk-track (format "~a" tid) notes))))
+
+(define (blueprint->orchestrated-midi bluep orch-assigns)
+  (for/list ([oa orch-assigns])
+    (define src-data (hash-ref bluep (assign-src oa)))
+    (mk-track
+     (assign-dst oa)
+     (if (procedure? (assign-xform oa)) (transpose (assign-xform oa) src-data) src-data))))
+
