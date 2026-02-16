@@ -84,6 +84,8 @@
    d5
    ))
 
+(bar4/4 : q qr q q : h h)
+
 (define melody-c1-durs
   (bar4/4
    : q e er e e e e

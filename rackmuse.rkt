@@ -151,12 +151,13 @@
    ([l lst])
     (define s (spanf l))
     (cond
-      [(< s 0)
+      [(and (number? s) (< s 0))
        (define end (- acc s))
        (values end result)]
-      [else
+      [(and (number? s) (> s 0))
        (define end (+ acc s))
-       (values end (cons (mk-span acc end l) result))])))
+       (values end (cons (mk-span acc end l) result))]
+      [else (values acc result)])))
 
 (define (index-spans spans posn)
 
@@ -278,7 +279,7 @@
    ([ps pitches]
     [ns '()] #:result (reverse ns))
    ([d durations])
-    (if (and (> d 0) ps)
+    (if (and (number? d) (> d 0) ps)
         (values (cdr ps) (cons (mk-note (car ps) d) ns))
         (values ps (cons (mk-note 0 d) ns)))))
 
