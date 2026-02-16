@@ -84,9 +84,8 @@
    d5
    ))
 
-(define-syntax-rule (bb args ...) (barchk bar args ...))
 (define melody-c1-durs
-  (bb
+  (bar4/4
    : q e er e e e e
    : q q q e er
    : q e er e e e e
