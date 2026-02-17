@@ -45,15 +45,15 @@
 (check-exn #rx"expected 5/4 but got 3/2 \\(need -1/4\\)" (lambda()(barchk 5 4 : q q q h : q qr qr h : hr hr hr)))
 
 (check-equal?
- (align-chk 4 4
+ (pitchchk 4 4
             (barchk 4 4 : q q qr q : q hr q : e e er dq e e)
             : 1 2 1 : 4 5 : 8 9 10 11 12)
  '(1 2 1 4 5 8 9 10 11 12))
 
 (check-exn #rx"expected 5 pitches, got 3 for bar 3"
-           (lambda()(align-chk 4 4 (list q q qr q  q hr q  e e er dq e e)
+           (lambda()(pitchchk 4 4 (list q q qr q  q hr q  e e er dq e e)
                                : 1 2 3 : 4 5 : 1 2 3 )))
 
 (check-exn #rx"expected 5 pitches, got 6 for bar 3"
-           (lambda()(align-chk 4 4 (list q q qr q  q hr q  e e er dq e e)
+           (lambda()(pitchchk 4 4 (list q q qr q  q hr q  e e er dq e e)
                                : 1 2 3 : 4 5 : 1 2 3 4 5 6)))

@@ -2,10 +2,12 @@
 
 
 (provide
- barchk
- align-chk
- bar3/4 bar4/4 bar5/4 bar6/4 bar7/4
- bar3/8 bar4/8 bar5/8 bar6/8 bar7/8
+ durchk
+ pitchchk
+ dur3/4 dur4/4 dur5/4 dur6/4 dur7/4
+ dur3/8 dur4/8 dur5/8 dur6/8 dur7/8
+ pitch3/4 pitch4/4 pitch5/4 pitch6/4 pitch7/4
+ pitch3/8 pitch4/8 pitch5/8 pitch6/8 pitch7/8
  )
 
 (require
@@ -36,7 +38,7 @@
            where tsig got (- expected got)))
   args)
 
-(define-syntax (barchk stx)
+(define-syntax (durchk stx)
   (syntax-parse stx
     [(_ num:expr denom:expr ps:pits ...)
      #`(append (dur-chk num denom #'ps.sep-stx ps.p ...) ...)]
@@ -53,36 +55,46 @@
         (values (cons count! acc) 0 0)
         (values acc count! pos!))))
 
-(define (expose slots . args)
+(define (pt-chk slots . args)
   (for/list ([s slots]
              [bp args]
              [i (in-naturals 1)])
     (define wherestx (car bp))
-    (define sum (length (cdr bp)))
+    (define pitches (cdr bp))
+    (define sum (length pitches))
     (unless (= s sum)
       (define where (srcloc->string (syntax-srcloc wherestx)))
       (error 'bars "~a: expected ~a pitches, got ~a for bar ~a"
              where s sum i))
-    (cdr bp)))
+    pitches))
 
-(define-syntax (align-chk stx)
+(define-syntax (pitchchk stx)
   (syntax-parse stx
     [(_ num:expr denom:expr durs:expr ps:pits ...)
-     #`(flatten (expose (slots-per-bar (/ num denom) durs) (list #'ps.sep-stx ps.p ...) ...))
+     #`(flatten (pt-chk (slots-per-bar (/ num denom) durs) (list #'ps.sep-stx ps.p ...) ...))
      ]
     ))
 
+(define-syntax-rule (dur3/4 args ...) (durchk 3 4 args ...))
+(define-syntax-rule (dur4/4 args ...) (durchk 4 4 args ...))
+(define-syntax-rule (dur5/4 args ...) (durchk 5 4 args ...))
+(define-syntax-rule (dur6/4 args ...) (durchk 6 4 args ...))
+(define-syntax-rule (dur7/4 args ...) (durchk 7 4 args ...))
 
+(define-syntax-rule (dur3/8 args ...) (durchk 3 8 args ...))
+(define-syntax-rule (dur4/8 args ...) (durchk 4 8 args ...))
+(define-syntax-rule (dur5/8 args ...) (durchk 5 8 args ...))
+(define-syntax-rule (dur6/8 args ...) (durchk 6 8 args ...))
+(define-syntax-rule (dur7/8 args ...) (durchk 7 8 args ...))
 
+(define-syntax-rule (pitch3/4 args ...) (pitchchk 3 4 args ...))
+(define-syntax-rule (pitch4/4 args ...) (pitchchk 4 4 args ...))
+(define-syntax-rule (pitch5/4 args ...) (pitchchk 5 4 args ...))
+(define-syntax-rule (pitch6/4 args ...) (pitchchk 6 4 args ...))
+(define-syntax-rule (pitch7/4 args ...) (pitchchk 7 4 args ...))
 
-(define-syntax-rule (bar3/4 args ...) (barchk 3 4 args ...))
-(define-syntax-rule (bar4/4 args ...) (barchk 4 4 args ...))
-(define-syntax-rule (bar5/4 args ...) (barchk 5 4 args ...))
-(define-syntax-rule (bar6/4 args ...) (barchk 6 4 args ...))
-(define-syntax-rule (bar7/4 args ...) (barchk 7 4 args ...))
-
-(define-syntax-rule (bar3/8 args ...) (barchk 3 8 args ...))
-(define-syntax-rule (bar4/8 args ...) (barchk 4 8 args ...))
-(define-syntax-rule (bar5/8 args ...) (barchk 5 8 args ...))
-(define-syntax-rule (bar6/8 args ...) (barchk 6 8 args ...))
-(define-syntax-rule (bar7/8 args ...) (barchk 7 8 args ...))
+(define-syntax-rule (pitch3/8 args ...) (pitchchk 3 8 args ...))
+(define-syntax-rule (pitch4/8 args ...) (pitchchk 4 8 args ...))
+(define-syntax-rule (pitch5/8 args ...) (pitchchk 5 8 args ...))
+(define-syntax-rule (pitch6/8 args ...) (pitchchk 6 8 args ...))
+(define-syntax-rule (pitch7/8 args ...) (pitchchk 7 8 args ...))

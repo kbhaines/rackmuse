@@ -310,7 +310,7 @@
 (struct assign (src dst xform) #:transparent)
 
 (define (blueprint->midi bluep)
-  (hash-map bluep (lambda (tid notes) (mk-track (format "~a" tid) notes))))
+  (hash-map bluep (lambda (tid notes) (mk-track (format "~a" tid) notes)) #t))
 
 (define (blueprint->orchestrated-midi bluep orch-assigns)
   (for/list ([oa orch-assigns])
