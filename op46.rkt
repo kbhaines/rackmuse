@@ -2,7 +2,7 @@
 
 (require
   "rackmuse.rkt"
-  "barchk.rkt"
+  "tools.rkt"
   "mid.rkt")
 
 
@@ -54,6 +54,29 @@
 (define rhythm-a2 (repeat 4 de sr))
 (define rhythm-c2 (repeat 4 s s e))
 
+(define melody-c1-durs
+  (bar4/4
+   : q e er e e e e
+   : q q q e er
+   : q e er e e e e
+   : h hr
+
+   : q e er e e e e
+   : h q q
+
+   ;; m7
+   : q e dq q
+   : h h
+   : q e q e e e
+   : h h
+
+   : q e dq q
+   : h h
+
+   : q e q e e e
+   : h h
+   : h h : w
+   ))
 (define melody-c1-pitches
   (list
    bf4 d5   ef5 d5 c5 bf4
@@ -84,31 +107,7 @@
    d5
    ))
 
-(bar4/4 : q qr q q : h h)
 
-(define melody-c1-durs
-  (bar4/4
-   : q e er e e e e
-   : q q q e er
-   : q e er e e e e
-   : h hr
-
-   : q e er e e e e
-   : h q q
-
-   ;; m7
-   : q e dq q
-   : h h
-   : q e q e e e
-   : h h
-
-   : q e dq q
-   : h h
-
-   : q e q e e e
-   : h h
-   : h h : w
-   ))
 
 (define tacet4 (tacet bar 4))
 

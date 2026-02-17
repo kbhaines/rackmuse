@@ -3,6 +3,7 @@
 
 (provide
  barchk
+ align-chk
  bar3/4 bar4/4 bar5/4 bar6/4 bar7/4
  bar3/8 bar4/8 bar5/8 bar6/8 bar7/8
  )
@@ -41,11 +42,11 @@
      #`(append (dur-chk num denom #'ps.sep-stx ps.p ...) ...)]
     ))
 
-(define (slots-per-bar durs)
+(define (slots-per-bar tsig durs)
   (for/fold
    ([acc '()][count 0][pos 0] #:result (reverse acc))
    ([d durs])
-    (define barlen (* 4 q))
+    (define barlen (* 4 PPQ tsig))
     (define pos! (+ pos (abs d)))
     (define count! (if (> d 0) (add1 count) count))
     (if (>= pos! barlen)
@@ -53,20 +54,26 @@
         (values acc count! pos!))))
 
 (define (expose slots . args)
-  (displayln (~a "fff" slots ":" args)))
+  (for/list ([s slots]
+             [bp args]
+             [i (in-naturals 1)])
+    (define wherestx (car bp))
+    (define sum (length (cdr bp)))
+    (unless (= s sum)
+      (define where (srcloc->string (syntax-srcloc wherestx)))
+      (error 'bars "~a: expected ~a pitches, got ~a for bar ~a"
+             where s sum i))
+    (cdr bp)))
 
 (define-syntax (align-chk stx)
   (syntax-parse stx
     [(_ num:expr denom:expr durs:expr ps:pits ...)
-     #`(expose (slots-per-bar durs) (list ps.p ...) ...)
+     #`(flatten (expose (slots-per-bar (/ num denom) durs) (list #'ps.sep-stx ps.p ...) ...))
      ]
     ))
 
-(align-chk 4 4
-           (barchk 4 4 : q q qr q : q hr q : e e er dq e e)
-           : 1 2 : 3 4 45)
-;; (slots-per-bar (barchk 4 4 : q q qr q : q hr q : e e er dq e e))
-;; (align-chk '(3 1) : 1 1 1 : 1)
+
+
 
 (define-syntax-rule (bar3/4 args ...) (barchk 3 4 args ...))
 (define-syntax-rule (bar4/4 args ...) (barchk 4 4 args ...))

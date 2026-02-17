@@ -1,6 +1,9 @@
 #lang racket
 
-(require rackunit "rackmuse.rkt")
+(require
+  rackunit
+  "rackmuse.rkt"
+  "tools.rkt")
 
 (define chdur (list h h))
 (check-equal? (durations->timeline (list qr e er q qr))
@@ -25,12 +28,32 @@
    (mk-chord bar 'em e3 g3 b3 b4)
    (mk-chord bar 'em2 e3 g3 b3 e4)))
 
-(define (sel1 t d lst) (printf "~a:~a " (/ t q) d) (first lst))
+(define (sel1 t d lst) #;(printf "~a:~a " (/ t q) d) (first lst))
+
 (check-equal? (harmony->voice (list q qr q qr e e q q qr h h q) chord-seq sel1)
               '((960 . c) (-960 . 0) (960 . c) (-960 . 0) (480 . f) (480 . f) (960 . f) (960 . f2) (-960 . 0) (1920 . em) (1920 . em) (960 . em2)))
 
 (check-equal? (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons q 'g4) (cons q 'g5)) #f)
               '((1920 . c4) (1920 . g4)))
 
-(check-equal? (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons qr 0) (cons q 'g5)) #f)
-              '((1920 . c4) (1920 . g4)))
+(check-equal?
+ (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons qr 0) (cons q 'g5)) #f)
+ '((1920 . c4) (1920 . 0)))
+
+(check-not-exn (lambda()(barchk 3 8 : er er er : e e e : q er)))
+(check-exn #rx"expected 1 but got 3/4" (lambda()(barchk 4 4 : q q qr q : q q q)))
+(check-exn #rx"expected 5/4 but got 3/2 \\(need -1/4\\)" (lambda()(barchk 5 4 : q q q h : q qr qr h : hr hr hr)))
+
+(check-equal?
+ (align-chk 4 4
+            (barchk 4 4 : q q qr q : q hr q : e e er dq e e)
+            : 1 2 1 : 4 5 : 8 9 10 11 12)
+ '(1 2 1 4 5 8 9 10 11 12))
+
+(check-exn #rx"expected 5 pitches, got 3 for bar 3"
+           (lambda()(align-chk 4 4 (list q q qr q  q hr q  e e er dq e e)
+                               : 1 2 3 : 4 5 : 1 2 3 )))
+
+(check-exn #rx"expected 5 pitches, got 6 for bar 3"
+           (lambda()(align-chk 4 4 (list q q qr q  q hr q  e e er dq e e)
+                               : 1 2 3 : 4 5 : 1 2 3 4 5 6)))
