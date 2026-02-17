@@ -40,20 +40,37 @@
  (harmony->voice (list h h) (list (cons q 'c4) (cons q 'c5) (cons qr 0) (cons q 'g5)) #f)
  '((1920 . c4) (1920 . 0)))
 
-(check-not-exn (lambda()(barchk 3 8 : er er er : e e e : q er)))
-(check-exn #rx"expected 1 but got 3/4" (lambda()(barchk 4 4 : q q qr q : q q q)))
-(check-exn #rx"expected 5/4 but got 3/2 \\(need -1/4\\)" (lambda()(barchk 5 4 : q q q h : q qr qr h : hr hr hr)))
+(check-not-exn (lambda()(durchk 3 8 : er er er : e e e : q er)))
+(check-exn #rx"expected 1 but got 3/4" (lambda()(durchk 4 4 : q q qr q : q q q)))
+(check-exn #rx"expected 5/4 but got 3/2 \\(need -1/4\\)" (lambda()(durchk 5 4 : q q q h : q qr qr h : hr hr hr)))
 
 (check-equal?
  (pitchchk 4 4
-            (barchk 4 4 : q q qr q : q hr q : e e er dq e e)
-            : 1 2 1 : 4 5 : 8 9 10 11 12)
+           (durchk 4 4 : q q qr q : q hr q : e e er dq e e)
+           : 1 2 1 : 4 5 : 8 9 10 11 12)
  '(1 2 1 4 5 8 9 10 11 12))
+
+(check-equal?
+ (pitchchk
+  5 4
+  (durchk 5 4 : q q q h : q qr qr h : hr hr qr : q hr hr)
+  : 1 2 3 4 : 5 6 : : 7)
+ '(1 2 3 4 5 6 7))
 
 (check-exn #rx"expected 5 pitches, got 3 for bar 3"
            (lambda()(pitchchk 4 4 (list q q qr q  q hr q  e e er dq e e)
-                               : 1 2 3 : 4 5 : 1 2 3 )))
+                              : 1 2 3 : 4 5 : 1 2 3 )))
 
 (check-exn #rx"expected 5 pitches, got 6 for bar 3"
            (lambda()(pitchchk 4 4 (list q q qr q  q hr q  e e er dq e e)
-                               : 1 2 3 : 4 5 : 1 2 3 4 5 6)))
+                              : 1 2 3 : 4 5 : 1 2 3 4 5 6)))
+
+(define/durpit c1  4  4
+  : q q qr q
+  : h h
+  ->
+  : 1 2 3
+  : 4 5)
+
+(check-equal? c1-durations '(960 960 -960 960 1920 1920))
+(check-equal? c1-pitches '(1 2 3 4 5))
