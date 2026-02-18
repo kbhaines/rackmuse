@@ -65,7 +65,7 @@
            (lambda()(pitchchk 4 4 (list q q qr q  q hr q  e e er dq e e)
                               : 1 2 3 : 4 5 : 1 2 3 4 5 6)))
 
-(define/durpit c1  4  4
+(define/durpit c1 4 4
   : q q qr q
   : h h
   ->

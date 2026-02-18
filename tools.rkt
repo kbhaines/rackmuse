@@ -9,8 +9,6 @@
  dur3/8 dur4/8 dur5/8 dur6/8 dur7/8
  pitch3/4 pitch4/4 pitch5/4 pitch6/4 pitch7/4
  pitch3/8 pitch4/8 pitch5/8 pitch6/8 pitch7/8
- define/durpit3/4 define/durpit4/4 define/durpit5/4 define/durpit6/4 define/durpit7/4
- define/durpit3/8 define/durpit4/8 define/durpit5/8 define/durpit6/8 define/durpit7/8
  )
 
 (require
@@ -90,7 +88,8 @@
        (syntax/loc stx
          (begin
            (define dur-id (durchk num denom ds ...))
-           (define pit-id (pitchchk num denom dur-id ps ...)))))
+           (define pit-id (pitchchk num denom dur-id ps ...))
+           (define name (zip-notes dur-id pit-id)))))
      ]))
 
 (define-syntax-rule (dur3/4 args ...) (durchk 3 4 args ...))
@@ -117,14 +116,3 @@
 (define-syntax-rule (pitch6/8 args ...) (pitchchk 6 8 args ...))
 (define-syntax-rule (pitch7/8 args ...) (pitchchk 7 8 args ...))
 
-(define-syntax-rule (define/durpit3/4 name args ...) (define/durpit name 3 4 args ...))
-(define-syntax-rule (define/durpit4/4 name args ...) (define/durpit name 4 4 args ...))
-(define-syntax-rule (define/durpit5/4 name args ...) (define/durpit name 5 4 args ...))
-(define-syntax-rule (define/durpit6/4 name args ...) (define/durpit name 6 4 args ...))
-(define-syntax-rule (define/durpit7/4 name args ...) (define/durpit name 7 4 args ...))
-
-(define-syntax-rule (define/durpit3/8 name args ...) (define/durpit name 3 8 args ...))
-(define-syntax-rule (define/durpit4/8 name args ...) (define/durpit name 4 8 args ...))
-(define-syntax-rule (define/durpit5/8 name args ...) (define/durpit name 5 8 args ...))
-(define-syntax-rule (define/durpit6/8 name args ...) (define/durpit name 6 8 args ...))
-(define-syntax-rule (define/durpit7/8 name args ...) (define/durpit name 7 8 args ...))
