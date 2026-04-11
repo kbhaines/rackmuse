@@ -1,6 +1,7 @@
 #lang racket
 
 (provide
+ def/dur
  PPQ
  w wr dw dwr
  h hr dh dhr
@@ -49,10 +50,26 @@
  (struct-out assign)
  )
 
-(require racket/generator)
+(require
+  racket/generator
+  (for-syntax racket/syntax))
 
 (define PPQ 960)
 
+(define-syntax (def/dur stx)
+  (syntax-case stx ()
+    [(_ id n d)
+     (with-syntax
+         ([dur (format-id #'id "~a" #'id)]
+          [dur-rest (format-id #'id "~ar" #'id)]
+          [dot-dur (format-id #'id "d~a" #'id)]
+          [dot-dur-rest (format-id #'id "d~ar" #'id)])
+       #'(begin
+           (define dur (* n d))
+           (define dur-rest (- 0 dur))
+           (define dot-dur (* 3 ( / d 2)))
+           (define dot-dur-rest (- 0 dot-dur))))]
+    ))
 (define (rest d) (- 0 d))
 (define (dot d) (* 3 (/ d 2)))
 
