@@ -6,7 +6,7 @@ midi_inspect() {
   INFILE=$1
   OUTFILE=$2
   shift 2
-  racket midi-inspect.rkt $INFILE --svg-unified --svg $OUTFILE --svg-width 1200 $*
+  racket midi-inspect.rkt $INFILE --svg-unified --svg $OUTFILE --svg-width 1500 $*
 }
 
 set -e

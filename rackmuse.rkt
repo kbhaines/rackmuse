@@ -11,7 +11,7 @@
  repeat rest dot
  tacet
 
- mk-chord chord-notes chord-duration inv
+ mk-chord chord-notes chord-duration inv inv1 inv2
  major minor
  mk-note note-note note-duration
 
@@ -117,12 +117,15 @@
 (define chord-duration car)
 (define chord-notes cadr)
 
-(define (major duration root) (mk-chord duration root (+ root 4) (+ root 7)))
-(define (minor duration root) (mk-chord duration root (+ root 3) (+ root 7)))
+(define (major duration root [modf identity]) (modf (mk-chord duration root (+ root 4) (+ root 7))))
+(define (minor duration root [modf identity]) (modf (mk-chord duration root (+ root 3) (+ root 7))))
 
 (define (inv chord [degree 1])
   (define-values (p1 p2) (split-at (chord-notes chord) degree))
   (apply mk-chord (chord-duration chord) (append p2 (map va8 p1))))
+
+(define inv1 inv)
+(define (inv2 c)(inv c 2))
 
 (define (mk-note note duration) (cons duration note))
 (define note-duration car)

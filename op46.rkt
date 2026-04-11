@@ -116,26 +116,52 @@
 
 (define section-c-orch
   (list
-   (assign 'a:melody "Trombone 1" #f)
-   (assign 'a:melody "Trombone 2" #f)
-   (assign 'a:melody "Trombone 3" vb8)
-   (assign 'a:melody "Horn 1" #f)
-   (assign 'a:melody "Horn 2" #f)
-   (assign 'a:melody "Horn 3" #f)
-   (assign 'a:melody "Horn 4" #f)
-   (assign 'a+1:melody "Violins 1" #f)
+   (assign 'a-mel:melody "Trumpet 1" #f)
+   (assign 'a-mel:melody "Horn 1" vb8)
+   (assign 'a-mel:melody "Horn 2" vb8)
+   (assign 'a-mel:melody "Trombone 1" vb8)
+
+   (assign 'e3:engine "Trombone 2" vb8)
+
+   (assign 'e4:engine "Violins 1" va8)
+   (assign 'e2:engine "Violins 2" va8)
+   (assign 'e3:engine "Violas" #f)
+   ;; (assign 'a-mel:melody "Trombone 3" vb16)
+   ;; (assign 'a-mel:melody "Horn 1" vb8)
+   ;; (assign 'a-mel:melody "Horn 2" vb8)
+   ;; (assign 'a-mel:melody "Horn 3" vb16)
+   ;; (assign 'a-mel:melody "Horn 4" vb16)
+   ;; (assign 'a+1:melody "Violins 1" #f)
    ;; (assign 'e2:engine "Violins 2" #f)
    ;; (assign 'c1:colour "Violas" #f)
    ;; (assign 'e1:engine "Trombone 2" #f)
    ;; (assign 'e1:engine "Trombone 3" #f)
 
    (assign 'b1:bass "Cellos" #f)
-   (assign 'sub-mel:support "Double Bass" #f)
+   (assign 'b1:bass "Double Bass" #f)
    ))
 
 (generate-midi 'c (blueprint->midi section-c-blueprint))
 
-;; (generate-midi 'b (blueprint->orchestrated-midi section-c-blueprint section-c-orch))
+(generate-midi 'c0 (blueprint->orchestrated-midi section-c-blueprint section-c-orch))
 
 
+(define chord-a-arp (arpeg '(0 1 2 1 2 3 2 1)))
 
+(define chords-a
+  (list
+   (mk-chord bar g2 bf2 d3 g3)
+   (mk-chord bar g2 bf2 ef3 g3)
+   (mk-chord bar f2 bf2 d3 f3)
+   (mk-chord bar a2 c3 f3 a3)
+
+   ;; (mk-chord bar g2 bf2 d3)
+   ;; (mk-chord bar ef2 g2 bf2)
+   ))
+
+(define section-a-blueprint
+  (hash
+   'a-mel:melody melody-c1
+   'e1:engine (harmony->voice (repeat 8 e e e e) chords-a chord-a-arp)
+   ))
+(generate-midi 'a (blueprint->midi section-a-blueprint))
