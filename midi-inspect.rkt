@@ -1,5 +1,13 @@
 #lang racket
 
+(provide generate-svg
+         write-svg
+         parse-midi
+         notes-from-tracks
+         time-signatures-from-tracks
+         text-events-from-tracks
+         track-info-from-tracks)
+
 (require racket/bytes
          racket/list
          racket/string
@@ -338,7 +346,15 @@
     '#("#1b9e77" "#d95f02" "#7570b3" "#e7298a" "#66a61e" "#e6ab02"))
   (vector-ref colors (modulo idx (vector-length colors))))
 
-(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count overtone-bloom? overtone-bloom-base? spectrotone?)
+(define (generate-svg notes division time-sigs unified? track-names track-functions use-function-colors?
+                      #:svg-width [svg-width 1200]
+                      #:svg-bars [svg-bars #f]
+                      #:svg-bar-range [svg-bar-range #f]
+                      #:text-events [text-events '()]
+                      #:overtone-count [overtone-count #f]
+                      #:overtone-bloom? [overtone-bloom? #f]
+                      #:overtone-bloom-base? [overtone-bloom-base? #f]
+                      #:spectrotone? [spectrotone? #f])
   (define note-h 16)
   (define pad-x 140)
   (define pad-y 20)
@@ -844,6 +860,19 @@
      "}\n"
      "]]></script>\n"
      "\n</svg>\n"))
+  svg)
+
+(define (write-svg path notes division time-sigs unified? track-names track-functions use-function-colors? svg-width svg-bars svg-bar-range text-events overtone-count overtone-bloom? overtone-bloom-base? spectrotone?)
+  (define svg
+    (generate-svg notes division time-sigs unified? track-names track-functions use-function-colors?
+                  #:svg-width (if svg-width svg-width 1200)
+                  #:svg-bars svg-bars
+                  #:svg-bar-range svg-bar-range
+                  #:text-events text-events
+                  #:overtone-count overtone-count
+                  #:overtone-bloom? overtone-bloom?
+                  #:overtone-bloom-base? overtone-bloom-base?
+                  #:spectrotone? spectrotone?))
   (call-with-output-file path
     (λ (out) (display svg out))
     #:exists 'replace))
@@ -853,7 +882,7 @@
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
   (displayln "  --svg-unified   Render a single piano roll for all tracks")
-  (displayln "  --svg-width N   Target total SVG width in pixels (auto-scales time)")
+  (displayln "  --svg-width N   Target total SVG width in pixels (default 1200)")
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
   (displayln "  --svg-overtones N Show N overtones (1-6, up to F5, if base <= C5)")
