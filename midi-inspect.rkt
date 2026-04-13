@@ -881,7 +881,7 @@
   (displayln "Usage: racket midi_inspect.rkt <file.mid> [--notes] [--svg out.svg] [--svg-unified] [--svg-width N] [--svg-bars N] [--svg-bar-range A:B] [--svg-overtones N] [--svg-overtones-bloom] [--svg-overtones-bloom-base] [--svg-overtones-bloom-all] [--svg-spectrotone] [--track-only LIST] [--track-except LIST] [--track-function] [--ascii] [--ascii-cols N]")
   (displayln "  --notes         Only print note-on/note-off events")
   (displayln "  --svg PATH      Write a piano-roll SVG to PATH")
-  (displayln "  --svg-unified   Render a single piano roll for all tracks")
+  (displayln "  --svg-no-unified   Render a single piano roll for all tracks")
   (displayln "  --svg-width N   Target total SVG width in pixels (default 1200)")
   (displayln "  --svg-bars N    Render only the first N bars")
   (displayln "  --svg-bar-range A:B  Render bars A through B (1-based, inclusive)")
@@ -901,7 +901,7 @@
   (define notes-only? (member "--notes" args))
   (define svg-idx (index-of args "--svg"))
   (define svg-path (and svg-idx (list-ref args (add1 svg-idx))))
-  (define svg-unified? (member "--svg-unified" args))
+  (define svg-unified? (not (member "--svg-no-unified" args)))
   (define svg-overtones-idx (index-of args "--svg-overtones"))
   (define svg-overtones
     (let ([v (and svg-overtones-idx (string->number (list-ref args (add1 svg-overtones-idx))))])
