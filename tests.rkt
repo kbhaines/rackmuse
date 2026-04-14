@@ -3,7 +3,7 @@
 (require
   rackunit
   "rackmuse.rkt"
-  "tools.rkt")
+  "music-utils.rkt")
 
 (define chdur (list h h))
 (check-equal? (durations->timeline (list qr e er q qr))

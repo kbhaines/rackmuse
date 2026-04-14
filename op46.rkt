@@ -2,7 +2,7 @@
 
 (require
   "rackmuse.rkt"
-  "tools.rkt"
+  "music-utils.rkt"
   "mid.rkt")
 
 
